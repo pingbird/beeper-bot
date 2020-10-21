@@ -1,0 +1,13 @@
+builders:
+  module_builder:
+    import: "package:beeper/generators/modules.dart"
+    builder_factories: ["moduleFactoryBuilder"]
+    build_extensions: {"$lib$": ["assets.g.dart"]}
+    build_to: source
+    auto_apply: dependents
+
+targets:
+  $default:
+    builders:
+      beeper|module_builder:
+        enabled: true
