@@ -26,12 +26,9 @@ class Bot {
   );
 
   void start() => wrap(() async {
-    final dynamic config = loadYaml(await File('config.yaml').readAsString());
-    discord = Discord(token: config['token'] as String);
+    final dynamic botConfig = loadYaml(await File('config/bot.yaml').readAsString());
 
-    scope = ModuleScope(bot: this, parent: null);
-
-    if (config['development'] == true) {
+    if (botConfig['development'] == true) {
       stderr.writeln('Hot reload started');
       await HotReloader.create(
         onAfterReload: (ctx) {
@@ -39,6 +36,21 @@ class Bot {
         }
       );
     }
+
+    scope = ModuleScope(bot: this, parent: null);
+    _initializing = true;
+    for (final config in botConfig['modules']) {
+      final metadata = moduleMetadata.entries.singleWhere((e) => e.value.label == config['type']);
+      if (metadata == null) {
+        throw StateError('Could not find module of type "${config['type']}"');
+      }
+      scope.injectWith(metadata.key, metadata.value.factory(), config['id']);
+    }
+    _initializing = false;
+
+    final dynamic tokenConfig = loadYaml(await File('config/token.yaml').readAsString());
+    discord = Discord(token: tokenConfig['token'] as String);
+
     await discord.initialize();
   });
 
@@ -77,11 +89,18 @@ class ModuleMetadata {
 
 abstract class Module {
   var _loaded = false;
-  dynamic configuration;
+  dynamic config;
 
+  @mustCallSuper
   Future<void> load() async {}
+
+  @mustCallSuper
   Future<void> unload() async {}
+
+  @mustCallSuper
   void ready() {}
+
+  @mustCallSuper
   void dispose() {}
 }
 
@@ -97,29 +116,31 @@ class ModuleScope {
   final children = <Object, ModuleScope>{};
   final _modules = <Tuple2<Type, Object>, Module>{};
 
-  T get<T extends Module>([Object id]) {
+  Module getWith(Type T, [Object id]) {
     if (T == Module) {
       throw ArgumentError('get requires type argument');
     }
     final key = Tuple2(T, id);
     if (_modules.containsKey(key)) {
-      final module = _modules[key] as T;
+      final module = _modules[key];
       if (!module._loaded) {
         throw StateError('Cannot access module that has not finished initialization`');
       }
       return module;
     } else {
-      return parent?.get(id);
+      return parent?.getWith(T, id);
     }
   }
 
-  FutureOr<T> require<T extends Module>([Object id]) async {
+  T get<T extends Module>([Object id]) => getWith(T, id) as T;
+
+  FutureOr<Module> requireWith(Type T, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('require requires type argument');
     } else if (!bot._initializing) {
       throw StateError('Cannot use require outside of load');
     }
-    var module = get(id) as T;
+    var module = getWith(T, id);
     if (module != null) {
       return module;
     }
@@ -127,7 +148,7 @@ class ModuleScope {
     if (metadata == null) {
       throw StateError('Could not find metadata for module type $T');
     }
-    module = (metadata.factory as T Function())();
+    module = metadata.factory();
     _modules[Tuple2(T, id)] = module;
     final startScope = bot.scope;
     bot.scope = this;
@@ -138,7 +159,16 @@ class ModuleScope {
     return module;
   }
 
-  void inject<T extends Module>(T module, [Object id]) async {
+  FutureOr<T> require<T extends Module>([Object id]) {
+    final result = requireWith(T, id);
+    if (result is T) {
+      return result;
+    } else {
+      return (result as Future<Module>).then((v) => v as T);
+    }
+  }
+
+  void injectWith(Type T, Module module, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('inject requires type argument');
     }
@@ -148,4 +178,6 @@ class ModuleScope {
     }
     _modules[Tuple2(T, id)] = module;
   }
+
+  void inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id);
 }

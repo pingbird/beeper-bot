@@ -8,4 +8,8 @@ build/
 # Directory created by dartdoc
 doc/api/
 
-config.yaml
+# IntelliJ
+.idea
+
+# Beeper configs
+config/
