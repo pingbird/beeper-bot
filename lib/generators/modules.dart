@@ -28,7 +28,7 @@ class ModuleFactoryBuilder extends Builder {
     final classes = <String, List<String>>{};
 
     final beeperLibrary = await buildStep.resolver.libraryFor(
-      await buildStep.findAssets(Glob('lib/beeper.dart')).single,
+      await buildStep.findAssets(Glob('lib/modules.dart')).single,
     );
     final moduleType = beeperLibrary.getType('Module').thisType;
     assert(moduleType != null);
@@ -59,7 +59,7 @@ class ModuleFactoryBuilder extends Builder {
 
     final out = StringBuffer();
 
-    out.writeln('import \'package:beeper/beeper.dart\';');
+    out.writeln('import \'package:beeper/modules.dart\';');
 
     for (final libs in classes.entries) {
       out.writeln('import \'${escape(libs.key)}\' show ${libs.value.join(', ')};');

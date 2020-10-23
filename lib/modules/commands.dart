@@ -1,4 +1,5 @@
 import 'package:beeper/beeper.dart';
+import 'package:beeper/modules.dart';
 
 class CommandsMod extends Module {
   static const label = 'commands';
