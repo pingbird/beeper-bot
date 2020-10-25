@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:beeper/discord/bot.dart';
+import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules.g.dart';
 
@@ -50,7 +50,13 @@ class Bot extends ModuleSystem {
     final dynamic tokenConfig = loadYaml(await File('config/token.yaml').readAsString());
     discord = Discord(token: tokenConfig['token'] as String);
 
-    await discord.initialize();
+    await discord.start();
+
+    await for (var state in discord.connectionStates) {
+      if (state.isConnected) break;
+    }
+
+    print('woo! ${discord.user.name}');
   });
 
   ModuleScope scope;
