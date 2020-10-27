@@ -49,6 +49,23 @@ class ModuleScope {
   final children = <Object, ModuleScope>{};
   final _modules = <Tuple2<Type, Object>, Module>{};
 
+  void _visitModules(void Function(Module module) fn) {
+    assert(!bot.initializing);
+    _modules.values.forEach(fn);
+    for (final child in children.values) {
+      child._visitModules(fn);
+    }
+  }
+
+  void visitModules(void Function(Module module) fn) {
+    final visited = <Module>{};
+    _visitModules((module) {
+      if (visited.add(module)) {
+        fn(module);
+      }
+    });
+  }
+
   Module getWith(Type T, [Object id]) {
     if (T == Module) {
       throw ArgumentError('get requires type argument');
@@ -67,7 +84,7 @@ class ModuleScope {
 
   T get<T extends Module>([Object id]) => getWith(T, id) as T;
 
-  FutureOr<Module> requireWith(Type T, [Object id]) async {
+  Future<Module> requireWith(Type T, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('require requires type argument');
     } else if (!bot.initializing) {
@@ -92,8 +109,8 @@ class ModuleScope {
     return module;
   }
 
-  FutureOr<T> require<T extends Module>([Object id]) {
-    final result = requireWith(T, id);
+  Future<T> require<T extends Module>([Object id]) async {
+    final result = await requireWith(T, id);
     if (result is T) {
       return result;
     } else {
@@ -101,9 +118,13 @@ class ModuleScope {
     }
   }
 
-  void injectWith(Type T, Module module, [Object id]) async {
+  Future<void> injectWith(Type T, Module module, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('inject requires type argument');
+    }
+    if (!module._loaded) {
+      await module.load();
+      module._loaded = true;
     }
     final key = Tuple2(T, id);
     if (_modules.containsKey(key)) {
@@ -112,5 +133,5 @@ class ModuleScope {
     _modules[Tuple2(T, id)] = module;
   }
 
-  void inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id);
+  Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id);
 }

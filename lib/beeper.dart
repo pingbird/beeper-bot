@@ -10,6 +10,7 @@ import 'package:hotreloader/hotreloader.dart';
 
 final _botKey = Object();
 Bot get bot => Zone.current[_botKey] as Bot;
+Discord get discord => bot.discord;
 
 class Bot extends ModuleSystem {
   Discord discord;
@@ -43,7 +44,7 @@ class Bot extends ModuleSystem {
       if (metadata == null) {
         throw StateError('Could not find module of type "${config['type']}"');
       }
-      scope.injectWith(metadata.key, metadata.value.factory(), config['id']);
+      await scope.injectWith(metadata.key, metadata.value.factory(), config['id']);
     }
     initializing = false;
 
@@ -52,9 +53,13 @@ class Bot extends ModuleSystem {
 
     await discord.start();
 
-    await for (var state in discord.connectionStates) {
+    await for (final state in discord.connectionStates) {
       if (state.isConnected) break;
     }
+
+    scope.visitModules((module) {
+      module.ready();
+    });
 
     print('woo! ${discord.user.name}');
   });
@@ -75,7 +80,7 @@ class Bot extends ModuleSystem {
     assert(scope != null);
   }
 
-  FutureOr<T> require<T extends Module>([Object id]) => scope.require<T>(id);
-  FutureOr<T> get<T extends Module>([Object id]) => scope.get<T>(id);
-  void inject<T extends Module>(T module, [Object id]) => scope.inject<T>(module, id);
+  Future<T> require<T extends Module>([Object id]) => scope.require<T>(id);
+  T get<T extends Module>([Object id]) => scope.get<T>(id);
+  Future<void> inject<T extends Module>(T module, [Object id]) => scope.inject<T>(module, id);
 }
