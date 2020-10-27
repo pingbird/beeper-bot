@@ -33,7 +33,7 @@ abstract class DiscordState {
   }
 
   DiscordConnectionState get connectionState => _connection.state;
-  ValueObservable<DiscordConnectionState> get connectionStates => _connection.states;
+  ValueStream<DiscordConnectionState> get connectionStates => _connection.states;
 
   final _userSubject = BehaviorSubject<DiscordUser>();
   DiscordUser get user => _userSubject.value;

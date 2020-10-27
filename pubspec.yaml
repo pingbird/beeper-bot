@@ -11,7 +11,7 @@ dependencies:
   yaml: ^2.2.1
   tuple: ^1.0.3
   strings: ^0.1.2
-  rxdart: '>=0.20.0'
+  rxdart: ^0.24.1
 
 dev_dependencies:
   source_gen: ^0.9.7

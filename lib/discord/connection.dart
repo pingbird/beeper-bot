@@ -111,9 +111,9 @@ class DiscordConnection {
   var _heartbeatResponse = false;
   int _heartbeatSequence;
 
-  final _stateSubject = BehaviorSubject(seedValue: DiscordConnectionState.stopped());
+  final _stateSubject = BehaviorSubject.seeded(DiscordConnectionState.stopped());
   DiscordConnectionState get state => _stateSubject.value;
-  ValueObservable<DiscordConnectionState> get states => _stateSubject.stream;
+  ValueStream<DiscordConnectionState> get states => _stateSubject.stream;
 
   void _send(int op, [dynamic data = _NoData.instance]) {
     final payload = jsonEncode(<String, dynamic>{
