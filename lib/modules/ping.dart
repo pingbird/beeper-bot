@@ -5,7 +5,7 @@ class PingMod extends Module with CommandReceiver {
   static const label = 'ping';
 
   @override
-  void ready() {
-    super.ready();
+  Future<void> load() async {
+    await super.load();
   }
 }

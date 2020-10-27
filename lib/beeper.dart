@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:yaml/yaml.dart';
+import 'package:hotreloader/hotreloader.dart';
+
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules.g.dart';
-
-import 'package:yaml/yaml.dart';
-import 'package:hotreloader/hotreloader.dart';
 
 final _botKey = Object();
 Bot get bot => Zone.current[_botKey] as Bot;

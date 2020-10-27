@@ -4,7 +4,7 @@ import 'package:beeper/beeper.dart';
 import 'package:meta/meta.dart';
 import 'package:tuple/tuple.dart';
 
-import 'modules.g.dart';
+import 'package:beeper/modules.g.dart';
 
 abstract class ModuleSystem {
   var initializing = false;
@@ -25,9 +25,11 @@ abstract class Module {
   dynamic config;
 
   @mustCallSuper
+  @protected
   Future<void> load() async {}
 
   @mustCallSuper
+  @protected
   Future<void> unload() async {}
 
   @mustCallSuper

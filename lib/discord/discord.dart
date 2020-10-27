@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
+
 import 'package:beeper/discord/connection.dart';
 import 'package:beeper/discord/guild.dart';
 import 'package:beeper/discord/state.dart';
-import 'package:meta/meta.dart';
-
 import 'package:beeper/discord/http.dart';
-
 export 'package:beeper/discord/guild.dart';
 
 abstract class Snowflake {

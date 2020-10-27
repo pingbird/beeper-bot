@@ -1,12 +1,10 @@
-import 'dart:collection';
-
-import 'package:beeper/discord/discord.dart';
-import 'package:beeper/discord/http.dart';
 import 'package:meta/meta.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'package:beeper/discord/connection.dart';
 import 'package:beeper/discord/guild.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:beeper/discord/discord.dart';
+import 'package:beeper/discord/http.dart';
 
 extension DiscordStateInternal on DiscordState {
   HttpService get http => _connection.http;

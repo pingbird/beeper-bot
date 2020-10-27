@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:beeper/discord/guild.dart';
 import 'package:meta/meta.dart';
-
-import 'package:beeper/discord/http.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:rxdart/subjects.dart' show BehaviorSubject;
+
+import 'package:beeper/discord/http.dart';
 
 abstract class Op {
   Op._();
