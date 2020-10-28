@@ -68,7 +68,7 @@ class ModuleScope {
     });
   }
 
-  Module getWith(Type T, [Object id]) {
+  Module getWith(Type T, {Object id}) {
     if (T == Module) {
       throw ArgumentError('get requires type argument');
     }
@@ -80,11 +80,11 @@ class ModuleScope {
       }
       return module;
     } else {
-      return parent?.getWith(T, id);
+      return parent?.getWith(T, id: id);
     }
   }
 
-  T get<T extends Module>([Object id]) => getWith(T, id) as T;
+  T get<T extends Module>({Object id}) => getWith(T, id: id) as T;
 
   Future<Module> requireWith(Type T, [Object id]) async {
     if (T == Module) {
@@ -92,7 +92,7 @@ class ModuleScope {
     } else if (!bot.initializing) {
       throw StateError('Cannot use require outside of load');
     }
-    var module = getWith(T, id);
+    var module = getWith(T, id: id);
     if (module != null) {
       return module;
     }
@@ -111,7 +111,7 @@ class ModuleScope {
     return module;
   }
 
-  Future<T> require<T extends Module>([Object id]) async {
+  Future<T> require<T extends Module>({Object id}) async {
     final result = await requireWith(T, id);
     if (result is T) {
       return result;
@@ -120,7 +120,7 @@ class ModuleScope {
     }
   }
 
-  Future<void> injectWith(Type T, Module module, [Object id]) async {
+  Future<void> injectWith(Type T, Module module, {Object id}) async {
     if (T == Module) {
       throw ArgumentError('inject requires type argument');
     }
@@ -135,5 +135,5 @@ class ModuleScope {
     _modules[Tuple2(T, id)] = module;
   }
 
-  Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id);
+  Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id: id);
 }

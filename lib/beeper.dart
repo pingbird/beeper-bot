@@ -46,7 +46,7 @@ class Bot extends ModuleSystem {
       }
       final module = metadata.value.factory();
       module.config = config;
-      await scope.injectWith(metadata.key, module, config['id']);
+      await scope.injectWith(metadata.key, module, id: config['id']);
     }
     initializing = false;
 
@@ -82,7 +82,7 @@ class Bot extends ModuleSystem {
     assert(scope != null);
   }
 
-  Future<T> require<T extends Module>([Object id]) => scope.require<T>(id);
-  T get<T extends Module>([Object id]) => scope.get<T>(id);
-  Future<void> inject<T extends Module>(T module, [Object id]) => scope.inject<T>(module, id);
+  Future<T> require<T extends Module>({Object id}) => scope.require<T>(id: id);
+  T get<T extends Module>({Object id}) => scope.get<T>(id: id);
+  Future<void> inject<T extends Module>(T module, {Object id}) => scope.inject<T>(module, id);
 }
