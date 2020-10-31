@@ -29,7 +29,9 @@ class Bot extends ModuleSystem {
       if (metadata == null) {
         throw StateError('Could not find module of type "${config['type']}"');
       }
-      await scope.injectWith(metadata.key, metadata.value.factory(), config['id']);
+      final module = metadata.value.factory();
+      module.config = config;
+      await scope.injectWith(metadata.key, module, id: config['id']);
     }
     initializing = false;
   }
