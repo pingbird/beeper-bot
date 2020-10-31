@@ -1,8 +1,7 @@
 import 'package:beeper/modules.dart';
-import 'package:beeper/modules/commands.dart' show CommandsMod;
-import 'package:beeper/modules/ping.dart' show PingMod;
-
+import 'package:beeper/modules/commands.dart' show CommandsModule;
+import 'package:beeper/modules/discord.dart' show DiscordModule;
 final moduleMetadata = {
-  CommandsMod: ModuleMetadata(label: 'commands', factory: () => CommandsMod()),
-  PingMod: ModuleMetadata(label: 'ping', factory: () => PingMod()),
+CommandsModule: ModuleMetadata(label:'commands',factory: () => CommandsModule()),
+DiscordModule: ModuleMetadata(label:'discord_loader',factory: () => DiscordModule()),
 };

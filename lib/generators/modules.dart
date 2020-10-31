@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:source_gen/source_gen.dart';
 import 'package:build/build.dart';
@@ -27,10 +28,10 @@ class ModuleFactoryBuilder extends Builder {
     final labels = <String, String>{};
     final classes = <String, List<String>>{};
 
-    final beeperLibrary = await buildStep.resolver.libraryFor(
+    final modulesLibrary = await buildStep.resolver.libraryFor(
       await buildStep.findAssets(Glob('lib/modules.dart')).single,
     );
-    final moduleType = beeperLibrary.getType('Module').thisType;
+    final moduleType = modulesLibrary.getType('Module').thisType;
     assert(moduleType != null);
 
     await for (final input in buildStep.findAssets(Glob('lib/modules/**'))) {
@@ -79,9 +80,16 @@ class ModuleFactoryBuilder extends Builder {
 
     out.writeln('};');
 
+    String formatted = '$out';
+    try {
+      formatted = formatter.format(formatted);
+    } catch (e, bt) {
+      stderr.writeln('Formatting failed with: $e\n$bt');
+    }
+
     await buildStep.writeAsString(
       _allFileOutput(buildStep),
-      formatter.format('$out'),
+      formatted,
     );
   }
 }

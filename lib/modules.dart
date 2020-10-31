@@ -1,13 +1,15 @@
 import 'dart:async';
 
-import 'package:beeper/beeper.dart';
 import 'package:meta/meta.dart';
 import 'package:tuple/tuple.dart';
 
 import 'package:beeper/modules.g.dart';
 
 abstract class ModuleSystem {
+  @protected
   var initializing = false;
+
+  ModuleScope scope;
 }
 
 class ModuleMetadata {
@@ -21,40 +23,73 @@ class ModuleMetadata {
 }
 
 abstract class Module {
-  var _loaded = false;
+  ModuleSystem system;
+  ModuleScope scope;
+
+  Completer<void> _loaded;
   dynamic config;
+
+  Future<void> _performLoad({
+    @required ModuleSystem system,
+    @required ModuleScope scope,
+  }) async {
+    if (_loaded == null) {
+      _loaded = Completer();
+      this.system = system;
+      this.scope = scope;
+      await load();
+      _loaded.complete();
+    } else {
+      return _loaded.future;
+    }
+  }
 
   @mustCallSuper
   @protected
-  Future<void> load() async {}
+  Future<void> load() async {
+    assert(scope != null);
+  }
 
   @mustCallSuper
   @protected
   Future<void> unload() async {}
 
   @mustCallSuper
-  void ready() {}
-
-  @mustCallSuper
   void dispose() {}
 }
 
 class ModuleScope {
-  final Bot bot;
+  final ModuleSystem system;
   final ModuleScope parent;
 
   ModuleScope({
-    @required this.bot,
+    @required this.system,
     @required this.parent,
   });
 
-  final children = <Object, ModuleScope>{};
+  final _children = <Object, ModuleScope>{};
   final _modules = <Tuple2<Type, Object>, Module>{};
+  ModuleScope _inherit;
+
+  ModuleScope push(Object id) {
+    if (_children.containsKey(id)) {
+      return _children[id];
+    } else if (_inherit._children.containsKey(id)) {
+      final scope = ModuleScope(system: system, parent: this);
+      scope._inherit = _inherit._children[id];
+      _children[id] = scope;
+      return scope;
+    } else {
+      final scope = ModuleScope(system: system, parent: this);
+      _children[id] = scope;
+      return scope;
+    }
+  }
 
   void _visitModules(void Function(Module module) fn) {
-    assert(!bot.initializing);
+    assert(!system.initializing);
     _modules.values.forEach(fn);
-    for (final child in children.values) {
+    for (final child in _children.values) {
       child._visitModules(fn);
     }
   }
@@ -75,9 +110,15 @@ class ModuleScope {
     final key = Tuple2(T, id);
     if (_modules.containsKey(key)) {
       final module = _modules[key];
-      if (!module._loaded) {
+      if (!module._loaded.isCompleted) {
         throw StateError('Cannot access module that has not finished initialization`');
       }
+      return module;
+    } else if (_inherit != null && _inherit._modules.containsKey(key)) {
+      final module = _inherit._modules[key];
+      assert(module._loaded.isCompleted);
+      module.scope = this;
+      _modules[key] = module;
       return module;
     } else {
       return parent?.getWith(T, id);
@@ -89,8 +130,8 @@ class ModuleScope {
   Future<Module> requireWith(Type T, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('require requires type argument');
-    } else if (!bot.initializing) {
-      throw StateError('Cannot use require outside of load');
+    } else if (!system.initializing) {
+      throw StateError('Cannot use require outside of load method');
     }
     var module = getWith(T, id);
     if (module != null) {
@@ -102,12 +143,15 @@ class ModuleScope {
     }
     module = metadata.factory();
     _modules[Tuple2(T, id)] = module;
-    final startScope = bot.scope;
-    bot.scope = this;
-    await module.load();
+    final startScope = system.scope;
+    system.scope = this;
+    await module._performLoad(
+      system: system,
+      scope: this,
+    );
     assert(startScope == this);
-    bot.scope = startScope;
-    module._loaded = true;
+    system.scope = startScope;
+    module._loaded.complete();
     return module;
   }
 
@@ -123,11 +167,13 @@ class ModuleScope {
   Future<void> injectWith(Type T, Module module, [Object id]) async {
     if (T == Module) {
       throw ArgumentError('inject requires type argument');
+    } else if (!system.initializing) {
+      throw StateError('Cannot use inject outside of load method');
     }
-    if (!module._loaded) {
-      await module.load();
-      module._loaded = true;
-    }
+    await module._performLoad(
+      system: system,
+      scope: this,
+    );
     final key = Tuple2(T, id);
     if (_modules.containsKey(key)) {
       throw StateError('Cannot inject $module: module already exists');
