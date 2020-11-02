@@ -5,21 +5,21 @@ import 'package:tuple/tuple.dart';
 
 import 'package:beeper/modules.g.dart';
 
+class Metadata {
+  final String name;
+  final Module Function() factory;
+
+  const Metadata({
+    @required this.name,
+    this.factory,
+  });
+}
+
 abstract class ModuleSystem {
   @protected
   var initializing = false;
 
   ModuleScope scope;
-}
-
-class ModuleMetadata {
-  final String label;
-  final Module Function() factory;
-
-  ModuleMetadata({
-    @required this.label,
-    @required this.factory,
-  });
 }
 
 abstract class Module {

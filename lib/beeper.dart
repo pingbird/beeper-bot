@@ -25,10 +25,11 @@ class Bot extends ModuleSystem {
     scope = ModuleScope(system: this, parent: null);
     initializing = true;
     for (final config in botConfig['modules']) {
-      final metadata = moduleMetadata.entries.singleWhere((e) => e.value.label == config['type']);
-      if (metadata == null) {
-        throw StateError('Could not find module of type "${config['type']}"');
+      final cantidates = moduleMetadata.entries.where((e) => e.value.name == config['type']);
+      if (cantidates.isEmpty) {
+        throw StateError('Could not find module with name "${config['type']}"');
       }
+      final metadata = cantidates.single;
       final module = metadata.value.factory();
       module.config = config;
       await scope.injectWith(metadata.key, module, id: config['id']);

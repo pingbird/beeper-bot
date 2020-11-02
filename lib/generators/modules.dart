@@ -7,6 +7,8 @@ import 'package:glob/glob.dart';
 import 'package:path/path.dart' show join;
 import 'package:strings/strings.dart' show escape;
 import 'package:dart_style/dart_style.dart' show DartFormatter;
+import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/constant/value.dart';
 
 class ModuleFactoryBuilder extends Builder {
   @override
@@ -23,14 +25,12 @@ class ModuleFactoryBuilder extends Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
-    final formatter = DartFormatter();
-
-    final labels = <String, String>{};
-    final classes = <String, List<String>>{};
+    final libs = <LibraryElement, List<ClassElement>>{};
 
     final modulesLibrary = await buildStep.resolver.libraryFor(
       await buildStep.findAssets(Glob('lib/modules.dart')).single,
     );
+    final metadataType = modulesLibrary.getType('Metadata').thisType;
     final moduleType = modulesLibrary.getType('Module').thisType;
     assert(moduleType != null);
 
@@ -38,23 +38,14 @@ class ModuleFactoryBuilder extends Builder {
       final library = await buildStep.resolver.libraryFor(input);
       final typeSystem = library.typeSystem;
       final classesInLibrary = LibraryReader(library).classes;
-      final classNames = <String>[];
+      final classElements = <ClassElement>[];
       for (final cls in classesInLibrary) {
         if (!cls.isAbstract && typeSystem.isAssignableTo(cls.thisType, moduleType)) {
-          assert(!labels.containsKey(cls.name));
-          final labelField = cls.getField('label');
-          if (labelField == null) {
-            throw ArgumentError('${cls.name} does not have a label');
-          } else if (!labelField.isStatic) {
-            throw ArgumentError('${cls.name}.label is not static');
-          }
-          final label = labelField.computeConstantValue().toStringValue();
-          labels[cls.name] = label;
-          classNames.add(cls.name);
+          classElements.add(cls);
         }
       }
-      if (classNames.isNotEmpty) {
-        classes['${library.librarySource.uri}'] = classNames;
+      if (classElements.isNotEmpty) {
+        libs[library] = classElements;
       }
     }
 
@@ -62,26 +53,70 @@ class ModuleFactoryBuilder extends Builder {
 
     out.writeln('import \'package:beeper/modules.dart\';');
 
-    for (final libs in classes.entries) {
-      out.writeln('import \'${escape(libs.key)}\' show ${libs.value.join(', ')};');
+    for (final lib in libs.entries) {
+      out.writeln(
+        'import \'${escape('${lib.key.source.uri}')}\' '
+        'show ${lib.value.map((e) => e.name).join(', ')};'
+      );
     }
 
     out.writeln('final moduleMetadata = {');
 
-    for (final libs in classes.entries) {
-      for (final cls in libs.value) {
+    for (final cls in libs.entries.expand((l) => l.value)) {
+      final name = cls.name;
+      final typeSystem = cls.library.typeSystem;
+      DartObject metadata;
+      for (final element in cls.metadata) {
+        final value = element.computeConstantValue();
+        if (typeSystem.isAssignableTo(value.type, metadataType)) {
+          metadata = value;
+          break;
+        }
+      }
+      if (metadata == null) {
+        throw ArgumentError('Class ${cls.name} from ${cls.library.source} does not have metadata.');
+      }
+      out.writeln(
+        '$name: Metadata('
+        'name: \'${escape(metadata.getField('name').toStringValue())}\','
+        'factory: () => $name()),'
+      );
+    }
+
+    out.writeln('};\n');
+
+    for (final lib in libs.entries) {
+      final reader = LibraryReader(lib.key);
+      for (final cls in lib.value) {
+        final name = cls.name;
+        if (!name.endsWith('Module')) {
+          continue;
+        }
+        final mixinName = '${name}Loader'.replaceAll('ModuleLoader', 'Loader');
+        if (reader.findType(mixinName) != null) {
+          continue;
+        }
+        final varName =
+          mixinName.substring(0, 1).toLowerCase()
+          + mixinName.substring(1, mixinName.length - 'Loader'.length);
         out.writeln(
-          '$cls: ModuleMetadata('
-          'label:\'${escape(labels[cls])}\','
-          'factory: () => $cls()),'
+          'mixin $mixinName on Module {\n'
+          '  $name $varName;\n\n'
+          '  @override\n'
+          '  Future<void> load() async {\n'
+          '    await super.load();\n'
+          '    $varName = await scope.require();\n'
+          '  }\n'
+          '}\n'
         );
       }
     }
 
-    out.writeln('};');
-
     String formatted = '$out';
     try {
+      final formatter = DartFormatter(
+        pageWidth: 1024,
+      );
       formatted = formatter.format(formatted);
     } catch (e, bt) {
       stderr.writeln('Formatting failed with: $e\n$bt');

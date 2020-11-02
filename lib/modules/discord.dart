@@ -11,16 +11,16 @@ mixin DiscordLoader on Module {
   }
 }
 
+@Metadata(name: 'discord')
 class DiscordModule extends Module {
-  static const label = 'discord_loader';
   Discord discord;
 
   @override
   Future<void> load() async {
     await super.load();
-    assert(config != null, 'Config required for discord_loader');
+    assert(config != null, 'Config required for discord');
     final token = config['token'] as String;
-    assert(token != null, 'Config missing token for discord_loader');
+    assert(token != null, 'Config missing token for discord');
     discord = Discord(token: token);
     await discord.start();
     await for (final state in discord.connectionStates) {
