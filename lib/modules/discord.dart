@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 
@@ -15,12 +17,15 @@ mixin DiscordLoader on Module {
 class DiscordModule extends Module {
   Discord discord;
 
+  final String token;
+
+  DiscordModule({
+    @required this.token,
+  });
+
   @override
   Future<void> load() async {
     await super.load();
-    assert(config != null, 'Config required for discord');
-    final token = config['token'] as String;
-    assert(token != null, 'Config missing token for discord');
     discord = Discord(token: token);
     await discord.start();
     await for (final state in discord.connectionStates) {

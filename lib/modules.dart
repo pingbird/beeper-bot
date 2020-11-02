@@ -7,10 +7,12 @@ import 'package:beeper/modules.g.dart';
 
 class Metadata {
   final String name;
-  final Module Function() factory;
+  final bool lazyLoad;
+  final Module Function(dynamic data) factory;
 
   const Metadata({
     @required this.name,
+    this.lazyLoad,
     this.factory,
   });
 }
@@ -27,7 +29,6 @@ abstract class Module {
   ModuleScope scope;
 
   Completer<void> _loaded;
-  dynamic config;
 
   Future<void> _performLoad({
     @required ModuleSystem system,
@@ -141,7 +142,11 @@ class ModuleScope {
     if (metadata == null) {
       throw StateError('Could not find metadata for module type $T');
     }
-    module = metadata.factory();
+    if (metadata.lazyLoad) {
+      module = metadata.factory(null);
+    } else {
+      throw StateError('Module $T not found');
+    }
     _modules[Tuple2(T, id)] = module;
     final startScope = system.scope;
     system.scope = this;

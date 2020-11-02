@@ -30,8 +30,7 @@ class Bot extends ModuleSystem {
         throw StateError('Could not find module with name "${config['type']}"');
       }
       final metadata = cantidates.single;
-      final module = metadata.value.factory();
-      module.config = config;
+      final module = metadata.value.factory(config);
       await scope.injectWith(metadata.key, module, id: config['id']);
     }
     initializing = false;

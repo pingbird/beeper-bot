@@ -25,14 +25,14 @@ class ModuleFactoryBuilder extends Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
-    final libs = <LibraryElement, List<ClassElement>>{};
-
     final modulesLibrary = await buildStep.resolver.libraryFor(
       await buildStep.findAssets(Glob('lib/modules.dart')).single,
     );
     final metadataType = modulesLibrary.getType('Metadata').thisType;
     final moduleType = modulesLibrary.getType('Module').thisType;
     assert(moduleType != null);
+
+    final libs = <LibraryElement, List<ClassElement>>{};
 
     await for (final input in buildStep.findAssets(Glob('lib/modules/**'))) {
       final library = await buildStep.resolver.libraryFor(input);
@@ -65,6 +65,7 @@ class ModuleFactoryBuilder extends Builder {
     for (final cls in libs.entries.expand((l) => l.value)) {
       final name = cls.name;
       final typeSystem = cls.library.typeSystem;
+
       DartObject metadata;
       for (final element in cls.metadata) {
         final value = element.computeConstantValue();
@@ -73,13 +74,30 @@ class ModuleFactoryBuilder extends Builder {
           break;
         }
       }
-      if (metadata == null) {
-        throw ArgumentError('Class ${cls.name} from ${cls.library.source} does not have metadata.');
+      assert(metadata != null, 'Module ${cls.name} from ${cls.library.source} does not have metadata');
+
+      assert(cls.unnamedConstructor != null, 'Module ${cls.name} from ${cls.library.source} does not have a default constructor');
+      final ctorArgs = cls.unnamedConstructor.parameters;
+
+      var args = <String>[];
+      var lazyLoad = metadata.getField('lazyLoad').toBoolValue();
+
+      if (ctorArgs.isEmpty) {
+        lazyLoad ??= true;
+      } else if (ctorArgs.length == 1 && ctorArgs.first.type.isDynamic) {
+        args.add('data');
+      } else {
+        for (final arg in ctorArgs) {
+          assert(arg.isNamed, 'Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
+          args.add('${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: false)}');
+        }
       }
+
       out.writeln(
         '$name: Metadata('
-        'name: \'${escape(metadata.getField('name').toStringValue())}\','
-        'factory: () => $name()),'
+        'name: \'${escape(metadata.getField('name').toStringValue())}\', '
+        'lazyLoad: ${lazyLoad ?? false}, '
+        'factory: (dynamic data) => $name(${args.join(', ')})),'
       );
     }
 
