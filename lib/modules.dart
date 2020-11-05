@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:tuple/tuple.dart';
 
-import 'package:beeper/modules.g.dart';
+import 'package:beeper/gen/modules.g.dart';
 
 class Metadata {
   final String name;

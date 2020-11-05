@@ -99,10 +99,7 @@ class DiscordConnection {
     this.http,
   }) : _token = token.trim();
 
-  void Function({
-    Object user,
-    List<Object> guilds,
-  }) onReady;
+  void Function(String name, Object data) onEvent;
 
   WebSocket _socket;
   int _heartbeatInterval;
@@ -114,7 +111,7 @@ class DiscordConnection {
   DiscordConnectionState get state => _stateSubject.value;
   ValueStream<DiscordConnectionState> get states => _stateSubject.stream;
 
-  void _send(int op, [dynamic data = _NoData.instance]) {
+  void send(int op, [dynamic data = _NoData.instance]) {
     final payload = jsonEncode(<String, dynamic>{
       'op': op,
       if (data != _NoData.instance) 'd': data,
@@ -126,7 +123,7 @@ class DiscordConnection {
   }
 
   void _sendHeartbeat() {
-    _send(Op.heartbeat, _heartbeatSequence);
+    send(Op.heartbeat, _heartbeatSequence);
     _heartbeatTimer = Timer(Duration(milliseconds: _heartbeatInterval), _heartbeat);
   }
 
@@ -150,20 +147,17 @@ class DiscordConnection {
 
     if (op == Op.dispatch) {
       if (name == 'READY') {
-        onReady(
-          user: data['user'],
-          guilds: data['guilds'] as List<Object>,
-        );
         _stateSubject.value = DiscordConnectionState.connected();
         retries = 0;
       }
       print('< $message');
+      onEvent(name, data);
     } else if (op == Op.hello) {
       _heartbeatInterval = data['heartbeat_interval'] as int;
       _sendHeartbeat();
-      _send(Op.identify, {
+      send(Op.identify, {
         'token': _token,
-        'intents': Intents.guildMessages,
+        'intents': Intents.guilds | Intents.directMessages | Intents.guildMessages,
         'properties': {
           '\$os': Platform.operatingSystem,
           '\$browser': 'beep',

@@ -5,7 +5,7 @@ import 'package:hotreloader/hotreloader.dart';
 
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
-import 'package:beeper/modules.g.dart';
+import 'package:beeper/gen/modules.g.dart';
 
 class Bot extends ModuleSystem {
   Discord discord;

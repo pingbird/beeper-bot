@@ -1,45 +1,27 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:beeper/generators/common.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:build/build.dart';
-import 'package:glob/glob.dart';
-import 'package:path/path.dart' show join;
 import 'package:strings/strings.dart' show escape;
-import 'package:dart_style/dart_style.dart' show DartFormatter;
 import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/constant/value.dart';
 
-class ModuleFactoryBuilder extends Builder {
+class ModulesBuilder extends AggregateBuilder {
   @override
-  final buildExtensions = const {
-    r'$lib$': ['modules.g.dart']
-  };
-
-  static AssetId _allFileOutput(BuildStep buildStep) {
-    return AssetId(
-      buildStep.inputId.package,
-      join('lib', 'modules.g.dart'),
-    );
-  }
+  List<String> get outputs => ['modules'];
 
   @override
-  Future<void> build(BuildStep buildStep) async {
-    final modulesLibrary = await buildStep.resolver.libraryFor(
-      await buildStep.findAssets(Glob('lib/modules.dart')).single,
-    );
+  Future<void> buildAggregate(AggregateContext context) async {
+    final modulesLibrary = await context.findLibs('lib/modules.dart').single;
     final metadataType = modulesLibrary.getType('Metadata').thisType;
     final moduleType = modulesLibrary.getType('Module').thisType;
-    assert(moduleType != null);
 
     final libs = <LibraryElement, List<ClassElement>>{};
 
-    await for (final input in buildStep.findAssets(Glob('lib/modules/**'))) {
-      final library = await buildStep.resolver.libraryFor(input);
+    await for (final library in context.findLibs('lib/modules/**')) {
       final typeSystem = library.typeSystem;
-      final classesInLibrary = LibraryReader(library).classes;
       final classElements = <ClassElement>[];
-      for (final cls in classesInLibrary) {
+      for (final cls in LibraryReader(library).classes) {
         if (!cls.isAbstract && typeSystem.isAssignableTo(cls.thisType, moduleType)) {
           classElements.add(cls);
         }
@@ -64,22 +46,16 @@ class ModuleFactoryBuilder extends Builder {
 
     for (final cls in libs.entries.expand((l) => l.value)) {
       final name = cls.name;
-      final typeSystem = cls.library.typeSystem;
 
-      DartObject metadata;
-      for (final element in cls.metadata) {
-        final value = element.computeConstantValue();
-        if (typeSystem.isAssignableTo(value.type, metadataType)) {
-          metadata = value;
-          break;
-        }
+      final metadata = cls.getMetadata(metadataType);
+      if (metadata == null) {
+        throw StateError('Module ${cls.name} from ${cls.library.source} does not have metadata');
+      } else if (cls.unnamedConstructor == null) {
+        throw StateError('Module ${cls.name} from ${cls.library.source} does not have a default constructor');
       }
-      assert(metadata != null, 'Module ${cls.name} from ${cls.library.source} does not have metadata');
-
-      assert(cls.unnamedConstructor != null, 'Module ${cls.name} from ${cls.library.source} does not have a default constructor');
       final ctorArgs = cls.unnamedConstructor.parameters;
 
-      var args = <String>[];
+      final args = <String>[];
       var lazyLoad = metadata.getField('lazyLoad').toBoolValue();
 
       if (ctorArgs.isEmpty) {
@@ -88,7 +64,9 @@ class ModuleFactoryBuilder extends Builder {
         args.add('data');
       } else {
         for (final arg in ctorArgs) {
-          assert(arg.isNamed, 'Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
+          if (!arg.isNamed) {
+            throw StateError('Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
+          }
           args.add('${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: false)}');
         }
       }
@@ -130,21 +108,8 @@ class ModuleFactoryBuilder extends Builder {
       }
     }
 
-    String formatted = '$out';
-    try {
-      final formatter = DartFormatter(
-        pageWidth: 1024,
-      );
-      formatted = formatter.format(formatted);
-    } catch (e, bt) {
-      stderr.writeln('Formatting failed with: $e\n$bt');
-    }
-
-    await buildStep.writeAsString(
-      _allFileOutput(buildStep),
-      formatted,
-    );
+    context.output('modules', '$out');
   }
 }
 
-Builder moduleFactoryBuilder(BuilderOptions options) => ModuleFactoryBuilder();
+Builder modulesBuilder(BuilderOptions options) => ModulesBuilder();

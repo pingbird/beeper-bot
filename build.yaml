@@ -1,13 +1,22 @@
 builders:
-  module_builder:
+  modules_builder:
     import: "package:beeper/generators/modules.dart"
-    builder_factories: ["moduleFactoryBuilder"]
-    build_extensions: {"$lib$": ["assets.g.dart"]}
+    builder_factories: [ "modulesBuilder" ]
+    build_extensions: { "$lib$": [ "gen/modules.g.dart" ] }
+    build_to: source
+    auto_apply: dependents
+
+  commands_builder:
+    import: "package:beeper/generators/commands.dart"
+    builder_factories: [ "commandsBuilder" ]
+    build_extensions: { "$lib$": [ "gen/commands.g.dart" ] }
     build_to: source
     auto_apply: dependents
 
 targets:
   $default:
     builders:
-      beeper|module_builder:
+      beeper|modules_builder:
+        enabled: true
+      beeper|commands_builder:
         enabled: true

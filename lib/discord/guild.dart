@@ -7,6 +7,7 @@ class DiscordGuild {
 
   String name;
   bool available = false;
+  bool destroyed = false;
 
   DiscordGuild({
     @required this.discord,
@@ -86,4 +87,22 @@ class DiscordMember {
     nick = data['nick'] as String;
     joinedAt = DateTime.parse(data['joinedAt'] as String);
   }
+}
+
+abstract class DiscordMessage {
+  int get id;
+}
+
+class DiscordGuildMessage extends DiscordMessage {
+  @override
+  final int id;
+
+  final DiscordGuild guild;
+  final String content;
+
+  DiscordGuildMessage({
+    @required this.id,
+    @required this.guild,
+    @required this.content,
+  });
 }
