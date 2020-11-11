@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/discord.dart';
 import 'package:beeper/modules/disposer.dart';
@@ -9,6 +11,17 @@ class Command {
   const Command({
     this.name,
     this.alias = const {},
+  });
+}
+
+class CommandEntry<T extends Module> {
+  Type get moduleType => T;
+  Command metadata;
+  Function Function(T module) extractor;
+
+  CommandEntry({
+    @required this.metadata,
+    @required this.extractor,
   });
 }
 

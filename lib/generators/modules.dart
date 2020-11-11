@@ -42,7 +42,7 @@ class ModulesBuilder extends AggregateBuilder {
       );
     }
 
-    out.writeln('final moduleMetadata = {');
+    out.writeln('Map<Type, Metadata> get moduleMetadata => {');
 
     for (final cls in libs.entries.expand((l) => l.value)) {
       final name = cls.name;

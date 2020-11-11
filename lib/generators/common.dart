@@ -8,6 +8,7 @@ import 'package:dart_style/dart_style.dart' show DartFormatter;
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:strings/strings.dart' show escape;
 
 class AggregateContext {
   final AggregateBuilder builder;
@@ -70,5 +71,43 @@ abstract class AggregateBuilder extends Builder {
   @override
   Future<void> build(BuildStep buildStep) async {
     await buildAggregate(AggregateContext(builder: this, buildStep: buildStep));
+  }
+}
+
+/// Encodes a DartObject into dart code, only supports a limited number of types.
+String objectEncode(DartObject value) {
+  final type = value.type;
+  if (type.isDartCoreNull) {
+    return 'null';
+  } else if (type.isDartCoreString) {
+    return '\'${escape(value.toStringValue())}\'';
+  } else if (type.isDartCoreInt) {
+    return '${value.toIntValue()}';
+  } else if (type.isDartCoreDouble) {
+    return '${value.toDoubleValue()}';
+  } else if (type.isDartCoreBool) {
+    return '${value.toBoolValue()}';
+  } else if (type.isDartCoreSet) {
+    return '{${value.toSetValue().map(objectEncode).join(', ')}}';
+  } else if (type.isDartCoreList) {
+    return '[${value.toListValue().map(objectEncode).join(', ')}]';
+  } else if (type.isDartCoreMap) {
+    return '{${value.toMapValue().entries.map((e) => '${objectEncode(e.key)}: ${objectEncode(e.value)}').join(', ')}';
+  } else if (type.isDartCoreSymbol) {
+    return '#${value.toSymbolValue()}';
+  } else if (type is InterfaceType) {
+    final args = <String>[];
+    final ctor = type.element.unnamedConstructor;
+    for (final arg in ctor.parameters) {
+      final argValue = value.getField(arg.name);
+      if (arg.isNamed && arg.computeConstantValue() != argValue) {
+        args.add('${arg.name}: ${objectEncode(argValue)}');
+      } else if ((arg.isOptional && arg.computeConstantValue() != argValue) || !arg.isOptional) {
+        args.add('${objectEncode(argValue)}');
+      }
+    }
+    return '${type.element.name}(${args.join(', ')})';
+  } else {
+    throw ArgumentError('Cannot encode object of type $type');
   }
 }
