@@ -3,7 +3,7 @@ import 'package:meta/meta.dart';
 
 import 'package:beeper/modules.dart';
 
-@Metadata(name: 'database')
+@Metadata(name: 'database', loadable: true)
 class DatabaseModule extends Module {
   PostgreSQLConnection connection;
 
@@ -11,10 +11,11 @@ class DatabaseModule extends Module {
 
   DatabaseModule({
     @required String uri,
-  }) : uri = Uri.parse(uri);
+  }) : uri = Uri.parse('//$uri');
 
   @override
   Future<void> load() async {
+    await super.load();
     final userInfo = uri.userInfo.split(':');
     connection = PostgreSQLConnection(
       uri.host,
@@ -24,6 +25,5 @@ class DatabaseModule extends Module {
       password: userInfo[1],
     );
     await connection.open();
-    return super.load();
   }
 }

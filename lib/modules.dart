@@ -5,6 +5,8 @@ import 'package:tuple/tuple.dart';
 
 import 'package:beeper/gen/modules.g.dart';
 
+export 'package:beeper/gen/modules.g.dart';
+
 class Metadata {
   final String name;
   final bool lazyLoad;

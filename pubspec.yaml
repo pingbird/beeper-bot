@@ -13,6 +13,7 @@ dependencies:
   strings: ^0.1.2
   rxdart: ^0.24.1
   postgres: ^2.2.0
+  shelf_static: ^0.2.8
 
 dev_dependencies:
   source_gen: ^0.9.7

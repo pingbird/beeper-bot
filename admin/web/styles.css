@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Nunito:wght@600&display=swap');
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: #ffffff;
+  position: relative;
+}
+
+#header {
+  width: 100%;
+  height: 100%;
+  background-color: #3c4043;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#header-content {
+  display: flex;
+  margin-bottom: 42px;
+}
+
+#header-beep {
+  margin-left: 24px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 30px;
+  color: #ffffff;
+  transform: rotate(-20deg);
+  height: 150px;
+}
+
+#header-desc {
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  flex-direction: row;
+}
+
+#avatar-bubble-inner {
+  border-radius: 100px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#avatar-bubble {
+  position: relative;
+  background-image: url("beeper.png");
+  background-size: 150px 150px;
+  background-repeat: no-repeat;
+  width: 150px;
+  height: 150px;
+  border-radius: 75px;
+  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-btn {
+  background-color: #809c5f;
+  padding: 8px 16px;
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  margin: 0 8px;
+  box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.05);
+}
+
+.header-btn.secondary {
+  background-color: #ffffff;
+  color: #101010;
+}
+
+a {
+  text-decoration: none;
+}
+
+#hello {
+  display: flex;
+  flex-direction: row;
+}
