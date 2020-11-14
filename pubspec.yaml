@@ -12,6 +12,7 @@ dependencies:
   tuple: ^1.0.3
   strings: ^0.1.2
   rxdart: ^0.24.1
+  postgres: ^2.2.0
 
 dev_dependencies:
   source_gen: ^0.9.7

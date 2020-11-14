@@ -158,7 +158,6 @@ class ModuleScope {
     );
     assert(startScope == this);
     system.scope = startScope;
-    module._loaded.complete();
     return module;
   }
 
