@@ -88,10 +88,17 @@ class ModulesBuilder extends AggregateBuilder {
         if (!name.endsWith('Module')) {
           continue;
         }
+
+        final metadata = cls.getMetadata(metadataType);
+        if (!metadata.getField('loadable').toBoolValue()) {
+          continue;
+        }
+
         final mixinName = '${name}Loader'.replaceAll('ModuleLoader', 'Loader');
         if (reader.findType(mixinName) != null) {
           continue;
         }
+
         final varName =
           mixinName.substring(0, 1).toLowerCase()
           + mixinName.substring(1, mixinName.length - 'Loader'.length);

@@ -5,6 +5,7 @@ import 'package:build/build.dart';
 import 'package:analyzer/dart/element/element.dart';
 
 import 'package:beeper/generators/common.dart';
+import 'package:strings/strings.dart';
 
 class CommandsBuilder extends AggregateBuilder {
   @override
@@ -36,9 +37,23 @@ class CommandsBuilder extends AggregateBuilder {
           if (commandInfo == null) continue;
           imports.putIfAbsent(library, () => {});
           imports[library].add(cls.name);
+
+          final commandName = commandInfo.getField('name').isNull
+            ? method.name
+            : commandInfo.getField('name').toStringValue();
+
+          final commandAliases = commandInfo.getField('alias').isNull
+            ? <String>[]
+            : commandInfo.getField('alias').toSetValue().map(
+                (s) => '\'${escape(s.toStringValue())}\''
+              );
+
           out.writeln(
-            '  CommandEntry<${cls.name}>('
-              'metadata: const ${objectEncode(commandInfo)}, '
+            'CommandEntry<${cls.name}>('
+              'metadata: const Command('
+                'name: \'${escape(commandName)}\','
+                'alias: {${commandAliases.join(', ')}}'
+              '),'
               'extractor: (m) => m.${method.name}'
             ')'
           );

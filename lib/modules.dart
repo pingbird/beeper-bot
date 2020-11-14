@@ -9,11 +9,13 @@ class Metadata {
   final String name;
   final bool lazyLoad;
   final Module Function(dynamic data) factory;
+  final bool loadable;
 
   const Metadata({
     @required this.name,
     this.lazyLoad,
     this.factory,
+    this.loadable = false,
   });
 }
 

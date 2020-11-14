@@ -18,13 +18,3 @@ mixin CommandsLoader on Module {
     commands = await scope.require();
   }
 }
-
-mixin PingLoader on Module {
-  PingModule ping;
-
-  @override
-  Future<void> load() async {
-    await super.load();
-    ping = await scope.require();
-  }
-}

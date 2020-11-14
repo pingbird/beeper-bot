@@ -25,7 +25,7 @@ class CommandEntry<T extends Module> {
   });
 }
 
-@Metadata(name: 'commands')
+@Metadata(name: 'commands', loadable: true)
 class CommandsModule extends Module with Disposer, DiscordLoader {
   @override
   Future<void> load() async {
