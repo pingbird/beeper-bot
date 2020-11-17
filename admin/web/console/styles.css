@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Nunito:wght@600&display=swap');
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+}
+
+html {
+  background-color: #809c5f;
+}
+
+body {
+  background: url("/birb_background.svg") center;
+  background-size: 400px 400px;
+}
+
+#body-header {
+  padding: 16px 64px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  color: #fff;
+  font-family: 'Baloo 2', cursive;
+  font-size: 18px;
+}
+
+#header-title {
+  margin-left: 16px;
+  margin-right: 16px;
+  flex-grow: 1;
+}
+
+#header-details {
+  font-size: 13px;
+}
+
+#header-title .separator {
+  color: rgba(255, 255, 255, 0.5);
+  margin: 8px;
+  display: inline;
+}
+
+#body-content {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1200px;
+  min-height: 100%;
+  background-color: #3c4043;
+}
+
+#avatar-bubble {
+  position: relative;
+  background-image: url("/beeper.png");
+  background-size: 32px 32px;
+  background-repeat: no-repeat;
+  width: 32px;
+  height: 32px;
+  border-radius: 32px;
+  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
+}
+
+#tab-bar {
+  margin: 24px;
+  display: flex;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+#tab-bar .tab {
+  padding: 8px 18px;
+  margin: 0 4px;
+  color: #ddd;
+  font-size: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 600;
+  transition: all 0.1s ease;
+  background-color: rgba(255, 255, 255, 0);
+  border-radius: 4px 4px 0 0;
+  border-bottom: 3px solid transparent;
+}
+
+#tab-bar .tab:hover {
+  transition: all 0.1s ease;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+
+#tab-bar .tab.active {
+  color: #fff;
+  border-bottom: 3px solid #809c5f;
+}
+
+#tab-view > * {
+  display: none;
+}
+
+#tab-view > *.active {
+  display: block;
+}

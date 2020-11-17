@@ -9,6 +9,8 @@ import 'package:shelf/shelf_io.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/disposer.dart';
 
+DateTime startTime;
+
 @Metadata(name: 'admin')
 class AdminModule extends Module with DatabaseLoader, Disposer {
   final Uri uri;
@@ -43,6 +45,9 @@ class AdminModule extends Module with DatabaseLoader, Disposer {
   @override
   Future<void> load() async {
     await super.load();
+
+    startTime ??= DateTime.now();
+
     server = await HttpServer.bind(uri.host, uri.port);
     staticHandler = createStaticHandler(assetPath, defaultDocument: 'index.html');
     queueDispose(server.listen((client) async {
