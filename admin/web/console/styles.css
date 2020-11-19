@@ -72,7 +72,7 @@ body {
 }
 
 #tab-bar .tab {
-  padding: 8px 18px;
+  padding: 8px 18px 4px;
   margin: 0 4px;
   color: #ddd;
   font-size: 16px;
@@ -101,4 +101,17 @@ body {
 
 #tab-view > *.active {
   display: block;
+}
+
+#status-row {
+  display: flex;
+}
+
+#status-avatar {
+  background-size: 128px 128px;
+  background-repeat: no-repeat;
+  width: 128px;
+  height: 128px;
+  border-radius: 64px;
+  box-shadow: 0 0 8px 8px rgba(0, 0, 0, 0.1);
 }

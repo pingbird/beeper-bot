@@ -1,3 +1,4 @@
+import 'package:beeper/modules/status.dart';
 import 'package:meta/meta.dart';
 
 import 'package:beeper/discord/discord.dart';
@@ -14,7 +15,7 @@ mixin DiscordLoader on Module {
 }
 
 @Metadata(name: 'discord')
-class DiscordModule extends Module {
+class DiscordModule extends Module with StatusLoader {
   Discord discord;
 
   final String token;
@@ -28,6 +29,19 @@ class DiscordModule extends Module {
     await super.load();
     discord = Discord(token: token);
     await discord.start();
+
+    discord.connectionStates.listen((state) {
+      status = {
+        'connected': state.isConnected,
+        if (discord.user != null) 'user': {
+          'id': discord.user.id,
+          'name': discord.user.name,
+          'discriminator': discord.user.discriminator,
+          'avatar': discord.user.avatar().toString(),
+        },
+      };
+    });
+
     await for (final state in discord.connectionStates) {
       if (state.isConnected) break;
     }

@@ -61,6 +61,11 @@ This module provides a service to interact with Beeper's PostgreSQL database.
 
 * `uri` - The username, password, host, port, and database name in URI form.
 
+## Admin console development
+
+To make it easier to develop the front-end, you can point the console to connect to a specific uri rather than inferring
+it from the origin e.g. `http://127.0.0.1:8080/console/?connect=ws://localhost:4050/ws`.
+
 ## Code Quality
 
 When in doubt refer to https://github.com/flutter/flutter/wiki/Style-guide-for-Flutter-repo

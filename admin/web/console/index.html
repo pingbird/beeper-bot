@@ -25,7 +25,7 @@
             Beeper Bot<div class="separator">-</div>Console
         </div>
         <div id="header-details">
-            v0.0.1<br/>Up 0 days
+            <span id="header-version">&nbsp;</span><br/><span id="header-uptime">&nbsp;</span>
         </div>
     </div>
     <div id="tab-bar">
@@ -34,8 +34,11 @@
         <div class="tab">Commands</div>
     </div>
     <div id="tab-view">
-        <div id="status-body">
-            Status
+        <div id="status-body" class="active">
+            <div id="status-row">
+                <div id="status-avatar"></div>
+                <div id="status-name"></div>
+            </div>
         </div>
         <div id="logs-body">
             Logs

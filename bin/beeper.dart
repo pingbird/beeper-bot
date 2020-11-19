@@ -1,5 +1,8 @@
 import 'package:beeper/beeper.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
-  Bot().start();
+  Chain.capture(() {
+    Bot().start();
+  });
 }

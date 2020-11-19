@@ -6,11 +6,30 @@ import 'package:hotreloader/hotreloader.dart';
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 
+extension ModuleBotExtension on Module {
+  Bot get bot => system as Bot;
+}
+
 class Bot extends ModuleSystem {
   Discord discord;
+  String version;
 
   void start() async {
     final dynamic botConfig = loadYaml(await File('config/bot.yaml').readAsString());
+
+    if (botConfig['version'] != null) {
+      version = botConfig['version'] as String;
+    } else {
+      try {
+        final result = await Process.run('git', ['rev-parse', '--short', 'HEAD']);
+        version = result.stdout.toString().trim();
+        if (version.isEmpty) {
+          version = 'unknown';
+        }
+      } catch (e) {
+        version = 'unknown';
+      }
+    }
 
     if (botConfig['development'] == true) {
       stderr.writeln('Hot reload started');
@@ -30,8 +49,10 @@ class Bot extends ModuleSystem {
       }
       final metadata = candidates.single;
       final module = metadata.value.factory(config);
+      print('Loading module ${metadata.value.name}');
       await scope.injectWith(metadata.key, module, id: config['id']);
     }
+    print('Done initializing');
     initializing = false;
   }
 }

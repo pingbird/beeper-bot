@@ -33,6 +33,20 @@ abstract class Module {
   ModuleScope scope;
 
   Completer<void> _loaded;
+  bool get loaded => _loaded.isCompleted;
+
+  String get canonicalName {
+    final key = scope.modules.entries.singleWhere(
+      (element) => element.value == this,
+    ).key;
+    final metadata = moduleMetadata[key.item1];
+    final scopeName = scope.canonicalName;
+    if (key.item2 == null) {
+      return '$scopeName/${metadata.name}';
+    } else {
+      return '$scopeName/${key.item2}#${metadata.name}';
+    }
+  }
 
   Future<void> _performLoad({
     @required ModuleSystem system,
@@ -75,6 +89,20 @@ class ModuleScope {
   final _children = <Object, ModuleScope>{};
   final _modules = <Tuple2<Type, Object>, Module>{};
   ModuleScope _inherit;
+
+  Map<Object, ModuleScope> get children => Map.unmodifiable(_children);
+  Map<Tuple2<Type, Object>, Module> get modules => Map.unmodifiable(_modules);
+
+  String get canonicalName {
+    if (parent == null) {
+      return '';
+    } else {
+      final key = children.entries.singleWhere(
+        (element) => element.value == this,
+      ).key;
+      return '${parent.canonicalName}/$key';
+    }
+  }
 
   ModuleScope push(Object id) {
     if (_children.containsKey(id)) {
@@ -152,14 +180,10 @@ class ModuleScope {
       throw StateError('Module $T not found');
     }
     _modules[Tuple2(T, id)] = module;
-    final startScope = system.scope;
-    system.scope = this;
     await module._performLoad(
       system: system,
       scope: this,
     );
-    assert(startScope == this);
-    system.scope = startScope;
     return module;
   }
 
@@ -178,15 +202,15 @@ class ModuleScope {
     } else if (!system.initializing) {
       throw StateError('Cannot use inject outside of load method');
     }
-    await module._performLoad(
-      system: system,
-      scope: this,
-    );
     final key = Tuple2(T, id);
     if (_modules.containsKey(key)) {
       throw StateError('Cannot inject $module: module already exists');
     }
     _modules[Tuple2(T, id)] = module;
+    await module._performLoad(
+      system: system,
+      scope: this,
+    );
   }
 
   Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id: id);

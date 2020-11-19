@@ -51,6 +51,7 @@ class DiscordUser {
 
   String name;
   int discriminator;
+  String avatarHash;
   bool bot;
   bool system;
   bool mfaEnabled;
@@ -60,12 +61,36 @@ class DiscordUser {
   void updateEntity(dynamic data) {
     name = data['username'] as String;
     discriminator = int.tryParse(data['discriminator'] as String);
+    avatarHash = data['avatar'] as String;
     bot = data['bot'] as bool ?? false;
     system = data['system'] as bool ?? false;
     mfaEnabled = data['mfa_enabled'] as bool ?? false;
     locale = data['locale'] as String;
     if (data['public_flags'] != null) {
       flags = UserFlags(data['public_flags'] as int);
+    }
+  }
+
+  Uri avatar({
+    String format,
+    int size,
+  }) {
+    if (avatarHash == null) {
+      return Uri(
+        scheme: 'https',
+        host: 'cdn.discordapp.com',
+        path: 'embed/avatars/${discriminator % 5}.png',
+      );
+    } else {
+      format ??= avatarHash.startsWith('a_') ? 'gif' : 'png';
+      return Uri(
+        scheme: 'https',
+        host: 'cdn.discordapp.com',
+        path: 'avatars/$id/$avatarHash.$format',
+        queryParameters: <String, String>{
+          if (size != null) 'size': '$size',
+        },
+      );
     }
   }
 }
