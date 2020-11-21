@@ -33,6 +33,7 @@ class Discord extends DiscordState {
   Map<int, DiscordUser> get users => UnmodifiableMapView(internalUsers);
   Map<int, DiscordGuild> get guilds => UnmodifiableMapView(internalGuilds);
   Map<int, DiscordChannel> get channels => UnmodifiableMapView(internalChannels);
+  Map<int, Map<int, DiscordMember>> get members => UnmodifiableMapView(internalMembers);
 
   Future<void> start() async {
     connection.start();

@@ -75,7 +75,10 @@ class HttpService {
     });
   }
 
-  Future<dynamic> send(String method, String path, {Map<String, dynamic> queryParameters, dynamic body}) async {
+  Future<dynamic> send(String method, String path, {
+    Map<String, dynamic> queryParameters,
+    dynamic body,
+  }) async {
     final request = http.Request(method, baseUri.replace(
       path: baseUri.path + '/' + path,
       queryParameters: queryParameters == null ? null : <String, dynamic>{
@@ -102,7 +105,10 @@ class HttpService {
   Future<dynamic> get(String path, {Map<String, dynamic> queryParameters}) =>
     send('GET', path, queryParameters: queryParameters);
 
-  Future<dynamic> post(String path, {Map<String, dynamic> queryParameters, dynamic body}) =>
+  Future<dynamic> post(String path, {
+    Map<String, dynamic> queryParameters,
+    dynamic body,
+  }) =>
     send('POST', path, queryParameters: queryParameters, body: body);
 }
 

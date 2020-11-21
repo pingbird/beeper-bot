@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:meta/meta.dart';
 import 'package:tuple/tuple.dart';
@@ -90,8 +91,8 @@ class ModuleScope {
   final _modules = <Tuple2<Type, Object>, Module>{};
   ModuleScope _inherit;
 
-  Map<Object, ModuleScope> get children => Map.unmodifiable(_children);
-  Map<Tuple2<Type, Object>, Module> get modules => Map.unmodifiable(_modules);
+  Map<Object, ModuleScope> get children => UnmodifiableMapView(_children);
+  Map<Tuple2<Type, Object>, Module> get modules => UnmodifiableMapView(_modules);
 
   String get canonicalName {
     if (parent == null) {

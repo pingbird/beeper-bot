@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/discord/state.dart';
 import 'package:meta/meta.dart';
@@ -15,7 +17,8 @@ class DiscordGuild {
   bool available = false;
   bool destroyed = false;
 
-  Map<int, DiscordMember> get members => Map.unmodifiable(discord.internalChannels);
+  Map<int, DiscordMember> get members =>
+    UnmodifiableMapView(discord.internalMembers[id]);
 
   void updateEntity(dynamic data) {
     name = data['name'] as String ?? name;
@@ -186,9 +189,7 @@ class DiscordMessage {
 
   Future<DiscordMessage> reply({
     String content,
-  }) {
-    return channel.send(
-      content: content,
-    );
-  }
+  }) => channel.send(
+    content: content,
+  );
 }
