@@ -1,18 +1,21 @@
 import 'package:beeper/discord/discord.dart';
+import 'package:beeper/discord/state.dart';
 import 'package:meta/meta.dart';
 
 class DiscordGuild {
   final Discord discord;
   final int id;
 
-  String name;
-  bool available = false;
-  bool destroyed = false;
-
   DiscordGuild({
     @required this.discord,
     @required this.id,
   });
+
+  String name;
+  bool available = false;
+  bool destroyed = false;
+
+  Map<int, DiscordMember> get members => Map.unmodifiable(discord.internalChannels);
 
   void updateEntity(dynamic data) {
     name = data['name'] as String ?? name;
@@ -96,9 +99,11 @@ class DiscordUser {
 }
 
 class DiscordMember {
+  final DiscordGuild guild;
   final DiscordUser user;
 
   DiscordMember({
+    @required this.guild,
     @required this.user,
   });
 
@@ -114,20 +119,76 @@ class DiscordMember {
   }
 }
 
-abstract class DiscordMessage {
-  int get id;
+enum DiscordChannelKind {
+  GuildText,
+  Direct,
+  GuildVoice,
+  Group,
+  GuildCategory,
+  GuildNews,
+  GuildStore,
 }
 
-class DiscordGuildMessage extends DiscordMessage {
-  @override
+class DiscordChannel {
+  final Discord discord;
   final int id;
-
+  final DiscordChannelKind kind;
   final DiscordGuild guild;
+
+  int position;
+  String name;
+  String topic;
+  bool nsfw;
+
+  DiscordChannel({
+    @required this.discord,
+    @required this.id,
+    @required this.kind,
+    this.guild,
+  });
+
+  void updateEntity(dynamic data) {
+    position = data['position'] as int;
+    name = data['name'] as String;
+    topic = data['topic'] as String;
+    nsfw = data['nsfw'] as bool;
+  }
+
+  Future<DiscordMessage> send({
+    String content,
+  }) async {
+    final dynamic data = await discord.http.post(
+      'channels/$id/messages',
+      body: <String, dynamic>{
+        'content': content,
+      },
+    );
+
+    return discord.wrapMessage(data);
+  }
+}
+
+class DiscordMessage {
+  final int id;
+  final DiscordChannel channel;
+  final DiscordUser user;
   final String content;
 
-  DiscordGuildMessage({
+  DiscordMessage({
     @required this.id,
-    @required this.guild,
+    @required this.channel,
+    @required this.user,
     @required this.content,
   });
+
+  DiscordGuild get guild => channel.guild;
+  DiscordMember get member => guild.members[user.id];
+
+  Future<DiscordMessage> reply({
+    String content,
+  }) {
+    return channel.send(
+      content: content,
+    );
+  }
 }

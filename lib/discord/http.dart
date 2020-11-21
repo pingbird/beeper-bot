@@ -6,6 +6,23 @@ import 'dart:math';
 import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 
+class DiscordHttpError {
+  final http.BaseRequest request;
+  final http.BaseResponse response;
+
+  DiscordHttpError({
+    final this.request,
+    final this.response,
+  });
+
+  @override
+  String toString() {
+    return
+      'Discord HTTP request failed: ${request.method} ${request.url} '
+      'returned ${response.statusCode}';
+  }
+}
+
 class HttpService {
   final client = http.Client();
 
@@ -21,7 +38,7 @@ class HttpService {
     this.userAgent,
   });
 
-  Future<http.StreamedResponse> sendRaw(http.Request request) async {
+  Future<http.StreamedResponse> sendRaw(http.BaseRequest request) async {
     var bucket = buckets[request.url.path];
     if (bucket == null) {
       bucket = HttpBucket();
@@ -58,7 +75,7 @@ class HttpService {
     });
   }
 
-  Future<dynamic> send(String method, String path, {Map<String, dynamic> queryParameters}) async {
+  Future<dynamic> send(String method, String path, {Map<String, dynamic> queryParameters, dynamic body}) async {
     final request = http.Request(method, baseUri.replace(
       path: baseUri.path + '/' + path,
       queryParameters: queryParameters == null ? null : <String, dynamic>{
@@ -69,12 +86,24 @@ class HttpService {
             e.key: '${e.value}',
       },
     ));
+
+    if (body != null) {
+      request.body = jsonEncode(body);
+      request.headers['Content-Type'] = 'application/json';
+    }
+
     final response = await sendRaw(request);
+    if (response.statusCode ~/ 100 != 2) {
+      throw DiscordHttpError(request: request, response: response);
+    }
     return jsonDecode(await response.stream.bytesToString());
   }
 
   Future<dynamic> get(String path, {Map<String, dynamic> queryParameters}) =>
     send('GET', path, queryParameters: queryParameters);
+
+  Future<dynamic> post(String path, {Map<String, dynamic> queryParameters, dynamic body}) =>
+    send('POST', path, queryParameters: queryParameters, body: body);
 }
 
 class HttpBucket {

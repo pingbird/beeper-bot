@@ -31,5 +31,13 @@ class CommandsModule extends Module with Disposer, DiscordLoader {
   Future<void> load() async {
     await super.load();
     print('connected! ${discord.user.name}');
+
+    queueDispose(discord.onMessageCreate.listen((message) {
+      if (message.user.bot) return;
+      final content = message.content;
+      if (content.trim() == '~ping') {
+        message.reply(content: 'pong');
+      }
+    }));
   }
 }

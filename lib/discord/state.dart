@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
@@ -11,10 +12,19 @@ import 'package:beeper/discord/http.dart';
 extension DiscordStateInternal on DiscordState {
   HttpService get http => _connection.http;
   DiscordConnection get connection => _connection;
-  void updateGuildEntity(dynamic data) => _updateGuildEntity(data);
-  void updateUserEntity(dynamic data) => _updateUserEntity(data);
+  DiscordGuild updateGuildEntity(dynamic data) => _updateGuildEntity(data);
+  DiscordUser updateUserEntity(dynamic data) => _updateUserEntity(data);
+  DiscordChannel updateChannelEntity(dynamic data) => _updateChannelEntity(data);
+  DiscordMember updateMemberEntity(dynamic data, {
+    @required DiscordGuild guild,
+    DiscordUser user,
+  }) => _updateMemberEntity(data, guild: guild, user: user);
+  DiscordMessage wrapMessage(dynamic data) => _wrapMessage(data);
+
   Map<int, DiscordUser> get internalUsers => _users;
   Map<int, DiscordGuild> get internalGuilds => _guilds;
+  Map<int, DiscordChannel> get internalChannels => _channels;
+  Map<int, Map<int, DiscordMember>> get internalMembers => _members;
 }
 
 abstract class DiscordState {
@@ -29,14 +39,10 @@ abstract class DiscordState {
   Stream<DiscordMessage> get onMessageCreate => _onMessageCreate.stream;
   final _onMessageCreate = StreamController<DiscordMessage>.broadcast();
 
-  Stream<DiscordGuildMessage> get onGuildMessageCreate => _onGuildMessageCreate.stream;
-  final _onGuildMessageCreate = StreamController<DiscordGuildMessage>.broadcast();
-
   DiscordState({
     @required DiscordConnection connection,
   }) : _connection = connection {
     _connection.onEvent = _onEvent;
-    _onMessageCreate.addStream(onGuildMessageCreate);
   }
 
   void _onEvent(String name, dynamic data) {
@@ -55,15 +61,20 @@ abstract class DiscordState {
         final guild = _updateGuildEntity(data);
         guild.destroyed = true;
         _onGuildDestroy.add(guild);
+        _members.remove(guild.id);
+        break;
+      case 'CHANNEL_CREATE':
+        _updateChannelEntity(data);
+        break;
+      case 'CHANNEL_UPDATE':
+        _updateChannelEntity(data);
         break;
       case 'MESSAGE_CREATE':
-        if (data['guild_id'] != null) {
-          _onGuildMessageCreate.add(DiscordGuildMessage(
-            id: int.parse(data['id'] as String),
-            guild: _guilds[int.parse(data['guild_id'] as String)],
-            content: data['content'] as String,
-          ));
+        // Ignore webhook messages (for now)
+        if (data['webhook_id'] != null) {
+          break;
         }
+        _onMessageCreate.add(_wrapMessage(data));
         break;
       default:
         break;
@@ -78,14 +89,22 @@ abstract class DiscordState {
 
   final _users = <int, DiscordUser>{};
   final _guilds = <int, DiscordGuild>{};
+  final _channels = <int, DiscordChannel>{};
+  final _members = <int, Map<int, DiscordMember>>{};
 
   DiscordGuild _updateGuildEntity(dynamic data) {
     final id = int.parse(data['id'] as String);
+    _members[id] ??= {};
     final guild = _guilds.putIfAbsent(id, () => DiscordGuild(
       discord: this as Discord,
       id: id,
     ));
     guild.updateEntity(data);
+
+    if (data['channels'] != null) {
+      (data['channels'] as List<dynamic>).forEach(_updateChannelEntity);
+    }
+
     return guild;
   }
 
@@ -97,5 +116,51 @@ abstract class DiscordState {
     ));
     user.updateEntity(data);
     return user;
+  }
+
+  DiscordChannel _updateChannelEntity(dynamic data) {
+    final id = int.parse(data['id'] as String);
+    DiscordGuild guild;
+    if (data['guild_id'] != null) {
+      guild = _guilds[int.parse(data['guild_id'] as String)];
+      if (guild == null) {
+        stderr.writeln('Warning! Guild for channel could not be found');
+      }
+    }
+    final user = _channels.putIfAbsent(id, () => DiscordChannel(
+      discord: this as Discord,
+      id: id,
+      kind: DiscordChannelKind.values[data['type'] as int],
+      guild: guild,
+    ));
+    user.updateEntity(data);
+    return user;
+  }
+
+  DiscordMember _updateMemberEntity(dynamic data, {
+    @required DiscordGuild guild,
+    DiscordUser user,
+  }) {
+    user ??= _updateUserEntity(data['user']);
+    final member = _members[guild.id].putIfAbsent(user.id, () => DiscordMember(
+      guild: guild,
+      user: user,
+    ));
+    member.updateEntity(data);
+    return member;
+  }
+
+  DiscordMessage _wrapMessage(dynamic data) {
+    final channel = _channels[int.parse(data['channel_id'] as String)];
+    if (channel == null) {
+      stderr.writeln('Warning! Could not find channel for message');
+    }
+    final user = _updateUserEntity(data['author']);
+    return DiscordMessage(
+      id: int.parse(data['id'] as String),
+      channel: channel,
+      user: user,
+      content: data['content'] as String,
+    );
   }
 }
