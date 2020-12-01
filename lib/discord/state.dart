@@ -21,6 +21,8 @@ extension DiscordStateInternal on DiscordState {
   }) => _updateMemberEntity(data, guild: guild, user: user);
   DiscordMessage wrapMessage(dynamic data) => _wrapMessage(data);
 
+  DiscordUser get internalUser => _userSubject.value;
+
   Map<int, DiscordUser> get internalUsers => _users;
   Map<int, DiscordGuild> get internalGuilds => _guilds;
   Map<int, DiscordChannel> get internalChannels => _channels;
@@ -85,7 +87,6 @@ abstract class DiscordState {
   ValueStream<DiscordConnectionState> get connectionStates => _connection.states;
 
   final _userSubject = BehaviorSubject<DiscordUser>();
-  DiscordUser get user => _userSubject.value;
 
   final _users = <int, DiscordUser>{};
   final _guilds = <int, DiscordGuild>{};

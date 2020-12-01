@@ -22,8 +22,9 @@ class CommandsBuilder extends AggregateBuilder {
     final imports = <LibraryElement, Set<String>>{};
     final out = StringBuffer();
 
+    out.writeln('import \'package:beeper/modules.dart\';');
     out.writeln('import \'package:beeper/modules/commands.dart\';');
-    out.writeln('List<CommandEntry> get commandEntries => [');
+    out.writeln('Map<Type, List<CommandEntry> Function(Module module)> get commandLoaders => {');
 
     await for (final library in context.findLibs('lib/modules/**')) {
       final typeSystem = library.typeSystem;
@@ -31,6 +32,8 @@ class CommandsBuilder extends AggregateBuilder {
         final metadata = cls.getMetadata(metadataType);
         if (metadata == null) continue;
         if (!typeSystem.isSubtypeOf(cls.thisType, moduleType)) continue;
+
+        final entries = <String>[];
 
         for (final method in cls.methods) {
           final commandInfo = method.getMetadata(commandType);
@@ -43,25 +46,35 @@ class CommandsBuilder extends AggregateBuilder {
             : commandInfo.getField('name').toStringValue();
 
           final commandAliases = commandInfo.getField('alias').isNull
-            ? <String>[]
+            ? <String>{}
             : commandInfo.getField('alias').toSetValue().map(
-                (s) => '\'${escape(s.toStringValue())}\''
-              );
+                (s) => s.toStringValue(),
+              ).toSet();
 
-          out.writeln(
-            'CommandEntry<${cls.name}>('
-              'metadata: const Command('
-                'name: \'${escape(commandName)}\','
-                'alias: {${commandAliases.join(', ')}}'
-              '),'
-              'extractor: (m) => m.${method.name}'
+          commandAliases.add(commandName);
+
+          entries.add(
+            'CommandEntry('
+              '{${commandAliases.map((s) => '\'${escape(s)}\'').join(', ')}},'
+              'm.${method.name}'
             ')'
+          );
+        }
+
+        if (entries.isNotEmpty) {
+          out.writeln(
+            '  ${cls.name}: (Module module) {\n'
+            '    final m = module as ${cls.name};\n'
+            '    return [\n'
+            '      ${entries.join(',\n      ')},\n'
+            '    ];\n'
+            '  },'
           );
         }
       }
     }
 
-    out.writeln('  ];');
+    out.writeln('};');
 
     String importString(MapEntry<LibraryElement, Set<String>> entry) {
       return 'import \'${entry.key.librarySource.uri}\';\n';

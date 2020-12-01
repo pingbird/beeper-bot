@@ -15,16 +15,6 @@ Map<Type, Metadata> get moduleMetadata => {
       StatusModule: Metadata(name: 'status', lazyLoad: true, factory: (dynamic data) => StatusModule()),
     };
 
-mixin CommandsLoader on Module {
-  CommandsModule commands;
-
-  @override
-  Future<void> load() async {
-    await super.load();
-    commands = await scope.require();
-  }
-}
-
 mixin DatabaseLoader on Module {
   DatabaseModule database;
 

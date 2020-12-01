@@ -1,6 +1,12 @@
 import 'package:beeper/modules/ping.dart';
+import 'package:beeper/modules.dart';
 import 'package:beeper/modules/commands.dart';
 
-List<CommandEntry> get commandEntries => [
-      CommandEntry<PingModule>(metadata: const Command(name: 'ping', alias: {'p'}), extractor: (m) => m.ping)
-    ];
+Map<Type, List<CommandEntry> Function(Module module)> get commandLoaders => {
+      PingModule: (Module module) {
+        final m = module as PingModule;
+        return [
+          CommandEntry({'p', 'ping'}, m.ping),
+        ];
+      },
+    };

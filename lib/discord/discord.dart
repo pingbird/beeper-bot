@@ -30,6 +30,8 @@ class Discord extends DiscordState {
     ),
   );
 
+  DiscordUser get user => internalUser;
+
   Map<int, DiscordUser> get users => UnmodifiableMapView(internalUsers);
   Map<int, DiscordGuild> get guilds => UnmodifiableMapView(internalGuilds);
   Map<int, DiscordChannel> get channels => UnmodifiableMapView(internalChannels);

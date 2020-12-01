@@ -9,5 +9,7 @@ class PingModule extends Module with DiscordLoader, CommandsLoader {
   PingModule({this.response});
 
   @Command(alias: {'p'})
-  String ping() => 'pong';
+  void ping(CommandInvocation cmd) {
+    cmd.writeln('pong');
+  }
 }

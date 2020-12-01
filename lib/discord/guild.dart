@@ -99,6 +99,10 @@ class DiscordUser {
       );
     }
   }
+
+  String mention({bool ping = true}) => '<@${ping ? '!' : ''}$id>';
+
+  Pattern get mentionPattern => RegExp('<@!?$id>');
 }
 
 class DiscordMember {
@@ -157,9 +161,7 @@ class DiscordChannel {
     nsfw = data['nsfw'] as bool;
   }
 
-  Future<DiscordMessage> send({
-    String content,
-  }) async {
+  Future<DiscordMessage> send(String content) async {
     final dynamic data = await discord.http.post(
       'channels/$id/messages',
       body: <String, dynamic>{
@@ -187,9 +189,5 @@ class DiscordMessage {
   DiscordGuild get guild => channel.guild;
   DiscordMember get member => guild.members[user.id];
 
-  Future<DiscordMessage> reply({
-    String content,
-  }) => channel.send(
-    content: content,
-  );
+  Future<DiscordMessage> reply(String content) => channel.send(content);
 }
