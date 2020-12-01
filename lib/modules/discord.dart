@@ -33,6 +33,7 @@ class DiscordModule extends Module with StatusLoader {
     discord.connectionStates.listen((state) {
       status = {
         'connected': state.isConnected,
+        'guilds': discord.guilds.length,
         if (discord.user != null) 'user': {
           'id': discord.user.id,
           'name': discord.user.name,

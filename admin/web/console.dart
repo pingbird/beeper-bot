@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:html';
 
+import 'package:intl/intl.dart';
+
 import 'package:admin/client.dart';
 
 void tabBarSetup() {
@@ -74,12 +76,17 @@ String timeString(num dt) {
   }
 }
 
-void connectionSetup() async {
+class ConsoleConnectionManager {
+  final statuses = <String, dynamic>{};
+
+  BeeperConnection connection;
+  BeeperInfo info;
+
   void updateDiscordStatus(dynamic data) {
     final dynamic user = data['user'];
     if (user != null) {
       querySelector('#status-avatar').style.backgroundImage = 'url("${user['avatar']}")';
-      querySelector('#status-name').text = '${user['name']}#${user['discriminator']}';
+      querySelector('#status-name').text = 'Connected as ${user['name']}#${user['discriminator']}';
     }
   }
 
@@ -87,37 +94,73 @@ void connectionSetup() async {
     if (module == '/discord') {
       updateDiscordStatus(data);
     }
+
+    if (data == null) {
+      statuses.remove(module);
+    } else {
+      statuses[module] = data;
+    }
   }
 
-  final connection = BeeperConnection(onStatusUpdate: updateStatus);
-  Timer timer;
+  String formatDate(DateTime date) => DateFormat.yMMMMd().format(date);
 
-  final info = await connection.start(
-    Uri.base.queryParameters['connect'] != null
-      ? Uri.parse(Uri.base.queryParameters['connect'])
-      : Uri(
-        scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
-        host: Uri.base.host,
-        path: '/ws',
-      ),
-  );
+  void updateStatsList() {
+    final stats = <String, dynamic>{
+      'Online since': formatDate(info.started),
+      if (statuses['/discord'] != null) ...<String, dynamic>{
+        'Snowflake': statuses['/discord']['user']['id'],
+        'Guilds': statuses['/discord']['guilds'],
+      },
+    };
 
-  void updateTime() {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final started = info.started.millisecondsSinceEpoch;
-    querySelector('#header-uptime').text = 'Up ${timeString((now - started) / 1000)}';
+    querySelector('#stats-list').children = [
+      for (final entry in stats.entries)
+        LIElement()
+          ..children = [
+            SpanElement()..text = entry.key,
+            SpanElement()..text = entry.value.toString(),
+          ]
+    ];
   }
 
-  updateTime();
-  timer?.cancel();
-  timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+  void startTimer() {
+    Timer timer;
+
+    void updateTime() {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final started = info.started.millisecondsSinceEpoch;
+      querySelector('#header-uptime').text = 'Up ${timeString((now - started) / 1000)}';
+    }
+
     updateTime();
-  });
+    timer?.cancel();
+    timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      updateTime();
+    });
+  }
 
-  querySelector('#header-version').text = info.version;
+  void start() async {
+    connection = BeeperConnection(onStatusUpdate: updateStatus);
+
+    info = await connection.start(
+      Uri.base.queryParameters['connect'] != null
+        ? Uri.parse(Uri.base.queryParameters['connect'])
+        : Uri(
+          scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
+          host: Uri.base.host,
+          path: '/ws',
+        ),
+    );
+
+    startTimer();
+
+    updateStatsList();
+
+    querySelector('#header-version').text = info.version;
+  }
 }
 
 void main() {
   tabBarSetup();
-  connectionSetup();
+  ConsoleConnectionManager().start();
 }
