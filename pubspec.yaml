@@ -6,10 +6,12 @@ environment:
   sdk: '>=2.10.0 <3.0.0'
 
 dependencies:
+  async: ^2.4.2
   clock: ^1.0.1
   http: ^0.12.2
   path: ^1.7.0
   postgres: ^2.2.0
+  pointycastle: ^2.0.0
   rxdart: ^0.24.1
   shelf_static: ^0.2.8
   stack_trace: ^1.9.6

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:beeper/secrets.dart';
 import 'package:meta/meta.dart';
 
 import 'package:beeper/discord/connection.dart';
@@ -21,7 +22,7 @@ abstract class Snowflake {
 class Discord extends DiscordState {
   Discord({@required String token}) : super(
     connection: DiscordConnection(
-      token: token,
+      token: decryptSecret('discord-token', token),
       http: HttpService(
         baseUri: Uri.parse('https://discord.com/api/v7'),
         userAgent: 'Beeper (https://github.com/PixelToast/beeper-bot, eternal beta)',
