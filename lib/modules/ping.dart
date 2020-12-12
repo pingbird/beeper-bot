@@ -1,9 +1,8 @@
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/commands.dart';
-import 'package:beeper/modules/discord.dart';
 
 @Metadata(name: 'ping')
-class PingModule extends Module with DiscordLoader, CommandsLoader {
+class PingModule extends Module with CommandsLoader {
   final String response;
 
   PingModule({this.response});
