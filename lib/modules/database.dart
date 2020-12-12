@@ -1,3 +1,4 @@
+import 'package:beeper/secrets.dart';
 import 'package:postgres/postgres.dart';
 import 'package:meta/meta.dart';
 
@@ -22,7 +23,7 @@ class DatabaseModule extends Module {
       uri.port,
       uri.pathSegments.single,
       username: userInfo[0],
-      password: userInfo[1],
+      password: decryptSecret('postgre-password', userInfo[1]),
     );
     await connection.open();
   }
