@@ -15,7 +15,16 @@ class Bot extends ModuleSystem {
   String version;
 
   void start() async {
-    final dynamic botConfig = loadYaml(await File('config/bot.yaml').readAsString());
+    final configFile = File('config/bot.yaml');
+    final configStat = configFile.statSync();
+
+    if (configStat.type != FileSystemEntityType.file) {
+      throw Exception('Configuration file config/bot.yaml not found or of wrong type');
+    } else if (!Platform.isWindows && configStat.mode & 7 != 0) {
+      throw Exception('Configuration file is accessible to outside users, mode 660 is recommended');
+    }
+
+    final dynamic botConfig = loadYaml(await configFile.readAsString());
 
     if (botConfig['version'] != null) {
       version = botConfig['version'] as String;
