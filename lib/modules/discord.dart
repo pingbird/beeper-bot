@@ -1,8 +1,9 @@
-import 'package:beeper/modules/status.dart';
 import 'package:meta/meta.dart';
 
-import 'package:beeper/discord/discord.dart';
+import 'package:beeper/secrets.dart';
 import 'package:beeper/modules.dart';
+import 'package:beeper/modules/status.dart';
+import 'package:beeper/discord/discord.dart';
 
 mixin DiscordLoader on Module {
   Discord discord;
@@ -27,7 +28,7 @@ class DiscordModule extends Module with StatusLoader {
   @override
   Future<void> load() async {
     await super.load();
-    discord = Discord(token: token);
+    discord = Discord(token: decryptSecret('discord-token', token));
     await discord.start();
 
     discord.connectionStates.listen((state) {

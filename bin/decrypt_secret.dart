@@ -8,6 +8,11 @@ int main(List<String> args) {
     return 1;
   }
 
+  if (Platform.environment['BEEPER_SECRET_KEY'] == null) {
+    stderr.writeln('Error: Missing BEEPER_SECRET_KEY environment variable');
+    return 1;
+  }
+
   print(decryptSecret(args[0], args[1]));
 
   return 0;

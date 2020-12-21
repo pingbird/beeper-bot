@@ -116,7 +116,7 @@ class DiscordConnection {
       'op': op,
       if (data != _NoData.instance) 'd': data,
     });
-    if (op != Op.heartbeat) {
+    if (op != Op.heartbeat && op != Op.identify) {
       print('> $payload');
     }
     _socket.add(payload);

@@ -9,7 +9,7 @@ import 'package:beeper/modules/status.dart' show StatusModule;
 Map<Type, Metadata> get moduleMetadata => {
       AdminModule: Metadata(name: 'admin', lazyLoad: false, factory: (dynamic data) => AdminModule(uri: data['uri'] as String, assetPath: data['assetPath'] as String)),
       CommandsModule: Metadata(name: 'commands', lazyLoad: true, factory: (dynamic data) => CommandsModule()),
-      DatabaseModule: Metadata(name: 'database', lazyLoad: false, factory: (dynamic data) => DatabaseModule(uri: data['uri'] as String)),
+      DatabaseModule: Metadata(name: 'database', lazyLoad: false, factory: (dynamic data) => DatabaseModule(host: data['host'] as String, port: data['port'] as int, user: data['user'] as String, password: data['password'] as String, database: data['database'] as String)),
       DiscordModule: Metadata(name: 'discord', lazyLoad: false, factory: (dynamic data) => DiscordModule(token: data['token'] as String)),
       PingModule: Metadata(name: 'ping', lazyLoad: false, factory: (dynamic data) => PingModule(response: data['response'] as String)),
       StatusModule: Metadata(name: 'status', lazyLoad: true, factory: (dynamic data) => StatusModule()),

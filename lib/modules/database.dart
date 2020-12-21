@@ -8,23 +8,31 @@ import 'package:beeper/modules.dart';
 class DatabaseModule extends Module {
   PostgreSQLConnection connection;
 
-  final Uri uri;
+  final String host;
+  final int port;
+  final String user;
+  final String password;
+  final String database;
 
   DatabaseModule({
-    @required String uri,
-  }) : uri = Uri.parse('//$uri');
+    @required this.host,
+    @required this.port,
+    @required this.user,
+    @required this.password,
+    @required this.database,
+  });
 
   @override
   Future<void> load() async {
     await super.load();
-    final userInfo = uri.userInfo.split(':');
     connection = PostgreSQLConnection(
-      uri.host,
-      uri.port,
-      uri.pathSegments.single,
-      username: userInfo[0],
-      password: decryptSecret('postgre-password', userInfo[1]),
+      host,
+      port,
+      database,
+      username: user,
+      password: decryptSecret('postgre-password', password),
     );
     await connection.open();
+    print('[database] Connected!');
   }
 }

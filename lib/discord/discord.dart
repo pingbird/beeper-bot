@@ -22,7 +22,7 @@ abstract class Snowflake {
 class Discord extends DiscordState {
   Discord({@required String token}) : super(
     connection: DiscordConnection(
-      token: decryptSecret('discord-token', token),
+      token: token,
       http: HttpService(
         baseUri: Uri.parse('https://discord.com/api/v7'),
         userAgent: 'Beeper (https://github.com/PixelToast/beeper-bot, eternal beta)',

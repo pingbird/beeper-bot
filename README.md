@@ -8,7 +8,11 @@ config/bot.yaml
 development: true
 modules:
   - type: database
-    uri: beeper:password@server:5432/beeper
+    host: localhost
+    port: 5432
+    user: beeper
+    password: <database password>
+    database: beeper
   - type: discord
     token: <discord token>
   - type: admin
@@ -67,8 +71,8 @@ This module manages a connection to Discord.
 
 This module provides a web interface for viewing logs and managing the bot.
 
-* `uri` - The ip and port for the http server to listen to.
-* `assetPath` - Optional, the path to static assets (in production we use nginx to serve them instead).
+* `uri` - The ip and port for the http server to listen to
+* `assetPath` - Optional, the path to static assets (in production we use nginx to serve them instead)
 
 #### modules/commands.dart
 
@@ -78,7 +82,11 @@ This module provides a command invocation and reply system for Discord and RPC.
 
 This module provides a service to interact with Beeper's PostgreSQL database.
 
-* `uri` - The username, password, host, port, and database name in URI form.
+* `host` - The hostname of the database
+* `port` - The port of the database
+* `user` - The user to authenticate with
+* `password` - The password of the user
+* `database` - The database name
 
 ## Admin console development
 
