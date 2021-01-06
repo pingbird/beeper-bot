@@ -26,14 +26,14 @@ class DiscordHttpError {
 class HttpService {
   final client = http.Client();
 
-  final Uri baseUri;
+  final Uri endpoint;
   final String authorization;
   final String userAgent;
 
   final buckets = <String, HttpBucket>{};
 
   HttpService({
-    @required this.baseUri,
+    @required this.endpoint,
     this.authorization,
     this.userAgent,
   });
@@ -79,8 +79,8 @@ class HttpService {
     Map<String, dynamic> queryParameters,
     dynamic body,
   }) async {
-    final request = http.Request(method, baseUri.replace(
-      path: baseUri.path + '/' + path,
+    final request = http.Request(method, endpoint.replace(
+      path: endpoint.path + '/' + path,
       queryParameters: queryParameters == null ? null : <String, dynamic>{
         for (var e in queryParameters.entries)
           if (e.value is Iterable)
@@ -152,7 +152,7 @@ class HttpBucket {
     @required int remaining,
     @required DateTime resetAt,
   }) {
-    remaining ??= this.remaining ?? 1;
+    remaining ??= this.remaining ?? 10;
     resetAt ??= this.resetAt ?? DateTime.now().add(const Duration(seconds: 1));
 
     if (!resetAt.isAfter(this.resetAt)) {

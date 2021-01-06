@@ -142,7 +142,7 @@ class DiscordConnection {
     final dynamic payload = jsonDecode(message as String);
     final dynamic data = payload['d'];
     final op = payload['op'] as int;
-    _heartbeatSequence = payload['s'] as int;
+    _heartbeatSequence = payload['s'] as int ?? _heartbeatSequence;
     final name = payload['t'] as String;
 
     if (op == Op.dispatch) {
@@ -195,6 +195,7 @@ class DiscordConnection {
         }
 
         final url = response['url'] as String;
+        print('url: $url');
         _socket = await WebSocket.connect(url + '?v=6&encoding=json');
         await _socket.forEach(_handle);
         print('closed: ${_socket.closeCode} (${_socket.closeReason})');

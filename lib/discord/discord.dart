@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:beeper/secrets.dart';
 import 'package:meta/meta.dart';
 
 import 'package:beeper/discord/connection.dart';
@@ -20,12 +19,16 @@ abstract class Snowflake {
 }
 
 class Discord extends DiscordState {
-  Discord({@required String token}) : super(
+  Discord({
+    @required String token,
+    Uri endpoint,
+    String userAgent = 'Beeper (https://github.com/PixelToast/beeper-bot, eternal beta)',
+  }) : super(
     connection: DiscordConnection(
       token: token,
       http: HttpService(
-        baseUri: Uri.parse('https://discord.com/api/v7'),
-        userAgent: 'Beeper (https://github.com/PixelToast/beeper-bot, eternal beta)',
+        endpoint: endpoint ?? Uri.parse('https://discord.com/api/v7'),
+        userAgent: userAgent,
         authorization: 'Bot ${token.trim()}',
       ),
     ),
@@ -39,6 +42,11 @@ class Discord extends DiscordState {
   Map<int, Map<int, DiscordMember>> get members => UnmodifiableMapView(internalMembers);
 
   Future<void> start() async {
+    // TODO(ping): Should we wait for ready event?
     connection.start();
+  }
+
+  void destroy() {
+    // TODO(ping): destroy things here
   }
 }

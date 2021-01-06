@@ -41,6 +41,21 @@ $ BEEPER_SECRET_KEY=hunter2 dart bin/decrypt_secret.dart discord-token g2JRs5ZTb
 NGZjMzE3NTkyZjUzNDM3OTViM
 ```
 
+## Setting up database
+
+Beeper uses postgresql, on Debian the following commands can be used to install postgre, create a user, and create a
+database:
+
+```
+sudo apt install -y postgresql-13
+sudo pg_ctlcluster 13 main start
+export BEEPER_DB_PASSWORD=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32}`
+sudo -u postgres bash -c "psql -c \"CREATE USER beeper WITH PASSWORD '$BEEPER_DB_PASSWORD';\""
+echo Database password: $BEEPER_DB_PASSWORD
+unset BEEPER_DB_PASSWORD
+sudo -u postgres createdb -O beeper beeper
+```
+
 ## Architecture
 
 Beeper consists of well-defined layers, each with their own library:
