@@ -1,3 +1,5 @@
+// @dart=2.9
+
 import 'dart:async';
 import 'dart:html';
 
@@ -117,7 +119,7 @@ class ConsoleConnectionManager {
       for (final entry in stats.entries)
         LIElement()
           ..children = [
-            SpanElement()..text = entry.key,
+            SpanElement()..classes.add('key')..text = entry.key,
             SpanElement()..text = entry.value.toString(),
           ]
     ];
@@ -148,6 +150,7 @@ class ConsoleConnectionManager {
         : Uri(
           scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
           host: Uri.base.host,
+          port: Uri.base.port,
           path: '/ws',
         ),
     );

@@ -140,7 +140,7 @@ body {
 
 #stats-list {
   margin-top: 24px;
-  width: 450px;
+  width: 400px;
   padding: 0;
   overflow-x: hidden;
   list-style: none;
@@ -164,4 +164,8 @@ body {
   float: right;
   padding-left: 6px;
   background-color: #3c4043;
+}
+
+#stats-list .key {
+  font-weight: bold;
 }
