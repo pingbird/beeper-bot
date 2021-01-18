@@ -6,8 +6,9 @@ import 'package:stack_trace/stack_trace.dart';
 
 void main(List<String> arguments) {
   runZonedGuarded(() {
-    Chain.capture(() {
-      Bot().start();
+    Chain.capture(() async {
+      final bot = await Bot.fromFile(File('config/bot.yaml'));
+      bot.start();
     });
   }, (e, bt) {
     stderr.writeln('Uncaught exception');

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:beeper/discord/connection.dart';
+import 'package:beeper/discord/discord.dart';
 import 'package:meta/meta.dart';
 
 class DiscordServerRequest {
@@ -131,9 +132,18 @@ class DiscordServer {
 
       final op = data['op'] as int;
 
-      // TODO(ping): Implement Op.ready
       if (op == Op.heartbeat) {
         send(Op.heartbeatAck);
+      } else if (op == Op.identify) {
+        send(Op.dispatch, <String, dynamic>{
+          'user': {
+            'id': '${Snowflake.random()}',
+            'username': 'test_bot',
+            'discriminator': '1234',
+            'bot': true,
+          },
+          'guilds': <dynamic>[],
+        }, 'READY');
       }
     }
     clients.remove(socket);

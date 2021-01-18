@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:meta/meta.dart';
 
@@ -16,6 +17,11 @@ abstract class Snowflake {
 
   static DateTime toDateTime(int snowflake) =>
     DateTime.fromMillisecondsSinceEpoch((snowflake >> 22) + epoch, isUtc: true);
+
+  static int random() {
+    final rand = Random();
+    return rand.nextInt(1 << 22) + (rand.nextInt(157680000) * 1000 << 22);
+  }
 }
 
 class Discord extends DiscordState {

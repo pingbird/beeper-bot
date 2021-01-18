@@ -35,4 +35,10 @@ class DatabaseModule extends Module {
     await connection.open();
     print('[database] Connected!');
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    connection.close();
+  }
 }

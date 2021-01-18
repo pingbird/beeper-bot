@@ -56,6 +56,13 @@ unset BEEPER_DB_PASSWORD
 sudo -u postgres createdb -O beeper beeper
 ```
 
+The following command will set up a beeper_test user for integration tests:
+
+```
+sudo -u postgres bash -c "psql -c \"CREATE USER beeper_test WITH PASSWORD 'test123';\""
+sudo -u postgres createdb -O beeper_test beeper_test
+```
+
 ## Architecture
 
 Beeper consists of well-defined layers, each with their own library:

@@ -215,4 +215,14 @@ class ModuleScope {
   }
 
   Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id: id);
+
+  void dispose() {
+    for (final scope in children.values) {
+      scope.dispose();
+    }
+
+    for (final module in modules.values) {
+      module.dispose();
+    }
+  }
 }

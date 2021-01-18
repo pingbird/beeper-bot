@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:yaml/yaml.dart';
+import 'package:meta/meta.dart';
 import 'package:hotreloader/hotreloader.dart';
 
-import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 
 extension ModuleBotExtension on Module {
@@ -11,23 +11,15 @@ extension ModuleBotExtension on Module {
 }
 
 class Bot extends ModuleSystem {
-  Discord discord;
   String version;
 
-  void start() async {
-    final configFile = File('config/bot.yaml');
-    final configStat = configFile.statSync();
+  dynamic config;
 
-    if (configStat.type != FileSystemEntityType.file) {
-      throw Exception('Configuration file config/bot.yaml not found or of wrong type');
-    } else if (!Platform.isWindows && configStat.mode & 7 != 0) {
-      throw Exception('Configuration file is accessible to outside users, mode 660 is recommended');
-    }
+  Bot({@required this.config});
 
-    final dynamic botConfig = loadYaml(await configFile.readAsString());
-
-    if (botConfig['version'] != null) {
-      version = botConfig['version'] as String;
+  Future<void> start() async {
+    if (config['version'] != null) {
+      version = config['version'] as String;
     } else {
       try {
         final result = await Process.run('git', ['rev-parse', '--short', 'HEAD']);
@@ -40,7 +32,7 @@ class Bot extends ModuleSystem {
       }
     }
 
-    if (botConfig['development'] == true) {
+    if (config['development'] == true) {
       stderr.writeln('Hot reload started');
       await HotReloader.create(
         onAfterReload: (ctx) {
@@ -51,7 +43,7 @@ class Bot extends ModuleSystem {
 
     scope = ModuleScope(system: this, parent: null);
     initializing = true;
-    for (final config in botConfig['modules']) {
+    for (final config in config['modules']) {
       final candidates = moduleMetadata.entries.where((e) => e.value.name == config['type']);
       if (candidates.isEmpty) {
         throw StateError('Could not find module with name "${config['type']}"');
@@ -63,5 +55,21 @@ class Bot extends ModuleSystem {
     }
     print('Done initializing');
     initializing = false;
+  }
+
+  static Future<Bot> fromFile(File file) async {
+    final configStat = file.statSync();
+
+    if (configStat.type != FileSystemEntityType.file) {
+      throw Exception('Configuration file config/bot.yaml not found or of wrong type');
+    } else if (!Platform.isWindows && configStat.mode & 7 != 0) {
+      throw Exception('Configuration file is accessible to outside users, mode 660 is recommended');
+    }
+
+    return Bot(config: loadYaml(await file.readAsString()));
+  }
+
+  void dispose() {
+    scope.dispose();
   }
 }

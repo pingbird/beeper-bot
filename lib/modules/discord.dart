@@ -20,15 +20,20 @@ class DiscordModule extends Module with StatusLoader {
   Discord discord;
 
   final String token;
+  final String endpoint;
 
   DiscordModule({
     @required this.token,
+    this.endpoint,
   });
 
   @override
   Future<void> load() async {
     await super.load();
-    discord = Discord(token: decryptSecret('discord-token', token));
+    discord = Discord(
+      token: decryptSecret('discord-token', token),
+      endpoint: endpoint == null ? null : Uri.parse(endpoint),
+    );
     await discord.start();
 
     discord.connectionStates.listen((state) {
