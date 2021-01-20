@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:beeper_common/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:rxdart/subjects.dart' show BehaviorSubject;
@@ -116,9 +117,6 @@ class DiscordConnection {
       'op': op,
       if (data != _NoData.instance) 'd': data,
     });
-    if (op != Op.heartbeat && op != Op.identify) {
-      print('> $payload');
-    }
     _socket.add(payload);
   }
 
@@ -150,7 +148,7 @@ class DiscordConnection {
         _stateSubject.value = DiscordConnectionState.connected();
         retries = 0;
       }
-      print('< $message');
+      logger.log('discord', '< $message', level: LogLevel.verbose);
       onEvent(name, data);
     } else if (op == Op.hello) {
       _heartbeatInterval = data['heartbeat_interval'] as int;
@@ -167,8 +165,8 @@ class DiscordConnection {
     } else if (op == Op.heartbeatAck) {
       _heartbeatResponse = true;
     } else {
-      print('< $message');
-      stderr.writeln('unknown opcode: $op');
+      logger.log('discord', '< $message', level: LogLevel.verbose);
+      logger.log('discord', 'Unknown opcode: $op', level: LogLevel.verbose);
     }
   }
 
@@ -184,8 +182,8 @@ class DiscordConnection {
         remaining = response['session_start_limit']['remaining'] as int;
         resetAfter = response['session_start_limit']['reset_after'] as int;
 
-        print('remaining: $remaining');
-        print('resetAfter: ${resetAfter / 1000}s');
+        logger.log('discord', 'remaining: $remaining');
+        logger.log('discord', 'resetAfter: ${resetAfter / 1000}s');
 
         if (remaining < 10) {
           _stateSubject.value = DiscordConnectionState.waiting(
@@ -195,17 +193,16 @@ class DiscordConnection {
         }
 
         final url = response['url'] as String;
-        print('url: $url');
         _socket = await WebSocket.connect(url + '?v=6&encoding=json');
         await _socket.forEach(_handle);
-        print('closed: ${_socket.closeCode} (${_socket.closeReason})');
+        logger.log('discord', 'closed: ${_socket.closeCode} (${_socket.closeReason})');
         var reason = 'Socket closed with code ${_socket.closeCode}';
         if (_socket.closeReason != null && _socket.closeReason.isNotEmpty) {
           reason += ' (${_socket.closeReason})';
         }
         _stateSubject.value = DiscordConnectionState.waiting(reason: reason);
       } catch (e, bt) {
-        stderr.writeln('$e\n$bt');
+        logger.log('discord', 'Failed to connect to gateway: $e\n$bt', level: LogLevel.error);
         _stateSubject.value = DiscordConnectionState.error(reason: '$e\n$bt');
       }
       _heartbeatTimer?.cancel();
@@ -214,7 +211,7 @@ class DiscordConnection {
       if (remaining != null) {
         wait = max(wait, resetAfter ~/ remaining);
       }
-      print('waiting ${wait / 1000}s');
+      logger.log('discord', 'Waiting ${wait / 1000}s to reconnect');
       await Future<void>.delayed(
         Duration(milliseconds: wait),
       );

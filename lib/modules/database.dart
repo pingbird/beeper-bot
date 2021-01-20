@@ -1,3 +1,4 @@
+import 'package:beeper/modules/status.dart';
 import 'package:beeper/secrets.dart';
 import 'package:postgres/postgres.dart';
 import 'package:meta/meta.dart';
@@ -5,7 +6,7 @@ import 'package:meta/meta.dart';
 import 'package:beeper/modules.dart';
 
 @Metadata(name: 'database', loadable: true)
-class DatabaseModule extends Module {
+class DatabaseModule extends Module with StatusLoader {
   PostgreSQLConnection connection;
 
   final String host;
@@ -33,7 +34,7 @@ class DatabaseModule extends Module {
       password: decryptSecret('postgre-password', password),
     );
     await connection.open();
-    print('[database] Connected!');
+    log('Connected!');
   }
 
   @override

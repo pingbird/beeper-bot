@@ -169,3 +169,28 @@ body {
 #stats-list .key {
   font-weight: bold;
 }
+
+#logs-body {
+  width: 100%;
+}
+
+#logs-view .log-event {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#logs-view .log-timestamp {
+  width: 150px;
+  color: #ffffff;
+}
+
+#logs-view .log-service {
+  width: 150px;
+  color: #ffffff;
+}
+
+#logs-view .log-content {
+  color: #ffffff;
+  word-break: break-word;
+}

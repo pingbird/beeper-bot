@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:meta/meta.dart';
 import 'package:shelf_static/shelf_static.dart';
@@ -37,6 +39,9 @@ class AdminModule extends Module with StatusLoader, Disposer {
     @required this.assetPath,
   }) : uri = Uri.parse('//$uri');
 
+  static const maxLogHistory = 4096;
+  final logHistory = Queue<LogEvent>();
+
   HttpServer server;
   Handler staticHandler;
 
@@ -61,8 +66,9 @@ class AdminModule extends Module with StatusLoader, Disposer {
   final clients = <AdminClient>{};
 
   void sendAll(dynamic data) {
+    final str = jsonEncode(data);
     for (final client in clients) {
-      client.send(data);
+      client.socket.add(str);
     }
   }
 
@@ -79,6 +85,7 @@ class AdminModule extends Module with StatusLoader, Disposer {
             'version': bot.version,
             'started': startTime.millisecondsSinceEpoch,
             'statuses': statuses,
+            'logs': logHistory.toList(),
           },
         });
         clients.add(client);
@@ -102,9 +109,9 @@ class AdminModule extends Module with StatusLoader, Disposer {
     await super.load();
 
     startTime ??= DateTime.now();
-
     server = await HttpServer.bind(uri.host, uri.port);
     staticHandler = createStaticHandler(assetPath, defaultDocument: 'index.html');
+
     queueDispose(server.listen((client) async {
       try {
         if (client.uri.path == '/ws') {
@@ -117,8 +124,6 @@ class AdminModule extends Module with StatusLoader, Disposer {
       }
     }));
 
-    print('Admin interface listening on $uri');
-
     queueDispose(statusModule.updates.listen((event) {
       final name = event.module.canonicalName;
       if (event.data == null) {
@@ -130,6 +135,17 @@ class AdminModule extends Module with StatusLoader, Disposer {
         't': 'status_update',
         'm': name,
         'd': event.data,
+      });
+    }));
+
+    queueDispose(statusModule.events.listen((event) {
+      if (logHistory.length >= maxLogHistory) {
+        logHistory.removeFirst();
+      }
+      logHistory.add(event);
+      sendAll({
+        't': 'log',
+        'd': event,
       });
     }));
   }

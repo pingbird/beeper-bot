@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:meta/meta.dart';
 
+import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules.dart';
 
 class StatusUpdateEvent {
@@ -14,9 +15,14 @@ class StatusUpdateEvent {
   });
 }
 
-@Metadata(name: 'status', loadable: true)
+@Metadata(name: 'status', lazyLoad: false)
 class StatusModule extends Module {
+  final Stream<LogEvent> events;
+
+  StatusModule(this.events);
+
   final _updateController = StreamController<StatusUpdateEvent>.broadcast();
+
   Stream<StatusUpdateEvent> get updates => _updateController.stream;
 }
 
@@ -63,5 +69,9 @@ mixin StatusLoader on Module {
       );
     }
     _loaded = false;
+  }
+
+  void log(String content, {LogLevel level = LogLevel.info}) {
+    logger.log(canonicalName, content, level: level);
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:beeper_common/logging.dart';
+import 'package:beeper/modules/status.dart';
 import 'package:meta/meta.dart';
 
 import 'package:beeper/modules.dart';
@@ -281,7 +282,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
 
 @Metadata(name: 'commands', loadable: true)
 class CommandsModule extends Module
-  with Disposer, DiscordLoader, DatabaseLoader {
+  with Disposer, DiscordLoader, DatabaseLoader, StatusLoader {
 
   final activeCommands = <String, CommandEntry>{};
 
@@ -348,9 +349,7 @@ class CommandsModule extends Module
           await invocation.call();
           await message.reply(invocation.result);
         } catch (e, bt) {
-          stderr.writeln('Error processing command in message ${message.id}');
-          stderr.writeln(e);
-          stderr.writeln(bt);
+          log('Error processing command in message ${message.id}:\n$e\n$bt', level: LogLevel.error);
         }
       }
     }));

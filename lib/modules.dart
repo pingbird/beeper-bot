@@ -13,12 +13,14 @@ class Metadata {
   final bool lazyLoad;
   final Module Function(dynamic data) factory;
   final bool loadable;
+  final bool configurable;
 
   const Metadata({
     @required this.name,
     this.lazyLoad,
     this.factory,
     this.loadable = false,
+    this.configurable = true,
   });
 }
 

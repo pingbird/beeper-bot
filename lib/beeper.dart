@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:yaml/yaml.dart';
 import 'package:meta/meta.dart';
 import 'package:hotreloader/hotreloader.dart';
 
+import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules.dart';
+import 'package:beeper/modules/status.dart';
 
 extension ModuleBotExtension on Module {
   Bot get bot => system as Bot;
@@ -15,7 +18,19 @@ class Bot extends ModuleSystem {
 
   dynamic config;
 
-  Bot({@required this.config});
+  Bot({@required this.config}) {
+    logger = Logger((e) {
+      if (e.level.index >= LogLevel.warning.index) {
+        stderr.writeln(e);
+      } else {
+        stdout.writeln(e);
+      }
+      _logEvents.add(e);
+    });
+  }
+
+  Logger logger;
+  final _logEvents = StreamController<LogEvent>.broadcast();
 
   Future<void> start() async {
     if (config['version'] != null) {
@@ -33,27 +48,40 @@ class Bot extends ModuleSystem {
     }
 
     if (config['development'] == true) {
-      stderr.writeln('Hot reload started');
+      logger.log('bot', 'Hot reload started');
       await HotReloader.create(
         onAfterReload: (ctx) {
-          stderr.writeln('Hot reload finished with ${ctx.result}');
+          logger.log('bot', 'Hot reload finished with ${ctx.result}');
         }
       );
     }
 
     scope = ModuleScope(system: this, parent: null);
+
+    reconfigure();
+  }
+
+  void reconfigure() async {
+    assert(initializing == false);
     initializing = true;
-    for (final config in config['modules']) {
-      final candidates = moduleMetadata.entries.where((e) => e.value.name == config['type']);
-      if (candidates.isEmpty) {
-        throw StateError('Could not find module with name "${config['type']}"');
+
+    await logger.wrap(() async {
+      scope.inject<StatusModule>(StatusModule(_logEvents.stream));
+
+      for (final config in config['modules']) {
+        final candidates = moduleMetadata.entries.where((e) => e.value.name == config['type']);
+        if (candidates.isEmpty) {
+          throw StateError('Could not find module with name "${config['type']}"');
+        }
+        final metadata = candidates.single;
+        if (!metadata.value.lazyLoad) {
+          throw StateError('Attempted to load module from config that cannot be lazy-loaded: "${metadata.value.name}"');
+        }
+        final module = metadata.value.factory(config);
+        await scope.injectWith(metadata.key, module, id: config['id']);
       }
-      final metadata = candidates.single;
-      final module = metadata.value.factory(config);
-      print('Loading module ${metadata.value.name}');
-      await scope.injectWith(metadata.key, module, id: config['id']);
-    }
-    print('Done initializing');
+    });
+
     initializing = false;
   }
 

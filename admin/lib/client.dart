@@ -7,6 +7,7 @@ import 'dart:html';
 import 'package:meta/meta.dart';
 
 import 'package:websocket/websocket.dart';
+import 'package:beeper_common/logging.dart';
 
 class BeeperInfo {
   DateTime started;
@@ -21,9 +22,11 @@ class BeeperInfo {
 
 class BeeperConnection {
   final Function(String module, dynamic data) onStatusUpdate;
+  final Function(LogEvent event) onLogEvent;
 
   BeeperConnection({
     @required this.onStatusUpdate,
+    @required this.onLogEvent,
   });
 
   final info = Completer<BeeperInfo>();
@@ -41,8 +44,13 @@ class BeeperConnection {
         for (final entry in statuses.entries) {
           onStatusUpdate(entry.key, entry.value);
         }
+        for (final event in data['d']['logs'] as List<dynamic>) {
+          onLogEvent(LogEvent.fromJson(event));
+        }
       } else if (type == 'status_update') {
         onStatusUpdate(data['m'] as String, data['d']);
+      } else if (type == 'log') {
+        onLogEvent(LogEvent.fromJson(data['d']));
       }
     }
   }

@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:beeper_common/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -125,7 +125,7 @@ abstract class DiscordState {
     if (data['guild_id'] != null) {
       guild = _guilds[int.parse(data['guild_id'] as String)];
       if (guild == null) {
-        stderr.writeln('Warning! Guild for channel could not be found');
+        logger.log('discord', 'Guild for channel $id could not be found', level: LogLevel.warning);
       }
     }
     final user = _channels.putIfAbsent(id, () => DiscordChannel(
@@ -152,13 +152,15 @@ abstract class DiscordState {
   }
 
   DiscordMessage _wrapMessage(dynamic data) {
-    final channel = _channels[int.parse(data['channel_id'] as String)];
+    final id = int.parse(data['id'] as String);
+    final channelId = int.parse(data['channel_id'] as String);
+    final channel = _channels[channelId];
     if (channel == null) {
-      stderr.writeln('Warning! Could not find channel for message');
+      logger.log('discord', 'Channel $channelId for message $id could not be found', level: LogLevel.warning);
     }
     final user = _updateUserEntity(data['author']);
     return DiscordMessage(
-      id: int.parse(data['id'] as String),
+      id: id,
       channel: channel,
       user: user,
       content: data['content'] as String,

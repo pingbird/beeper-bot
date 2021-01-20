@@ -5,6 +5,7 @@ import 'dart:html';
 
 import 'package:intl/intl.dart';
 
+import 'package:beeper_common/logging.dart';
 import 'package:admin/client.dart';
 
 void tabBarSetup() {
@@ -105,6 +106,7 @@ class ConsoleConnectionManager {
   }
 
   String formatDate(DateTime date) => DateFormat.yMMMMd().format(date);
+  String formatDatePrecise(DateTime date) => DateFormat.jms().format(date);
 
   void updateStatsList() {
     final stats = <String, dynamic>{
@@ -125,6 +127,24 @@ class ConsoleConnectionManager {
     ];
   }
 
+  void addLogEvent(LogEvent event) {
+    querySelector('#logs-view').children.add(
+      DivElement()
+        ..classes.add('log-event')
+        ..children.addAll([
+          DivElement()
+            ..classes.add('log-timestamp')
+            ..text = formatDatePrecise(event.time),
+          DivElement()
+            ..classes.add('log-service')
+            ..text = event.name,
+          PreElement()
+            ..classes.add('log-content')
+            ..text = event.content,
+        ]),
+    );
+  }
+
   void startTimer() {
     Timer timer;
 
@@ -142,7 +162,10 @@ class ConsoleConnectionManager {
   }
 
   void start() async {
-    connection = BeeperConnection(onStatusUpdate: updateStatus);
+    connection = BeeperConnection(
+      onStatusUpdate: updateStatus,
+      onLogEvent: addLogEvent,
+    );
 
     info = await connection.start(
       Uri.base.queryParameters['connect'] != null

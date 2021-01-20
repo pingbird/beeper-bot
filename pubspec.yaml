@@ -8,6 +8,8 @@ environment:
 dependencies:
   async: ^2.4.2
   clock: ^1.0.1
+  beeper_common:
+    path: common
   http: ^0.12.2
   path: ^1.7.0
   pointycastle: ^2.0.0

@@ -58,11 +58,9 @@ class ModulesBuilder extends AggregateBuilder {
       final args = <String>[];
       var lazyLoad = metadata.getField('lazyLoad').toBoolValue();
 
-      if (ctorArgs.isEmpty) {
-        lazyLoad ??= true;
-      } else if (ctorArgs.length == 1 && ctorArgs.first.type.isDynamic) {
+      if (ctorArgs.length == 1 && ctorArgs.first.type.isDynamic) {
         args.add('data');
-      } else {
+      } else if (lazyLoad != false) {
         for (final arg in ctorArgs) {
           if (!arg.isNamed) {
             throw StateError('Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
@@ -71,11 +69,16 @@ class ModulesBuilder extends AggregateBuilder {
         }
       }
 
+      lazyLoad ??= true;
+
       out.writeln(
         '$name: Metadata('
         'name: \'${escape(metadata.getField('name').toStringValue())}\', '
-        'lazyLoad: ${lazyLoad ?? false}, '
-        'factory: (dynamic data) => $name(${args.join(', ')})),'
+        'lazyLoad: $lazyLoad, ' + (
+          lazyLoad
+            ? 'factory: (dynamic data) => $name(${args.join(', ')})),'
+            : 'factory: null),'
+        )
       );
     }
 
