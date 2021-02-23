@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:beeper/modules/database.dart';
 import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:meta/meta.dart';

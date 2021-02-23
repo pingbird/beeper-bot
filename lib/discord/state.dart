@@ -41,6 +41,9 @@ abstract class DiscordState {
   Stream<DiscordMessage> get onMessageCreate => _onMessageCreate.stream;
   final _onMessageCreate = StreamController<DiscordMessage>.broadcast();
 
+  Stream<Map<String, dynamic>> get onRawMessageCreate => _onRawMessageCreate.stream;
+  final _onRawMessageCreate = StreamController<Map<String, dynamic>>.broadcast();
+
   DiscordState({
     @required DiscordConnection connection,
   }) : _connection = connection {
@@ -69,13 +72,16 @@ abstract class DiscordState {
         _updateChannelEntity(data);
         break;
       case 'CHANNEL_UPDATE':
-        _updateChannelEntity(data);
+        // TODO(ping): _updateMessageEntity
         break;
       case 'MESSAGE_CREATE':
+        _onRawMessageCreate.add(data as Map<String, dynamic>);
+
         // Ignore webhook messages (for now)
-        if (data['webhook_id'] != null) {
+        if (data['webhook_id'] != null || data['type'] != 0) {
           break;
         }
+
         _onMessageCreate.add(_wrapMessage(data));
         break;
       default:
@@ -161,9 +167,18 @@ abstract class DiscordState {
     final user = _updateUserEntity(data['author']);
     return DiscordMessage(
       id: id,
+      rawJson: data,
       channel: channel,
       user: user,
       content: data['content'] as String,
+      embeds: [
+        for (final embed in data['embeds'] as List<dynamic>)
+          DiscordEmbed.fromJson(embed),
+      ],
+      attachments: [
+        for (final attachment in data['attachments'] as List<dynamic>)
+          DiscordAttachment.fromJson(attachment),
+      ],
     );
   }
 }

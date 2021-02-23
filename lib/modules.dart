@@ -96,15 +96,18 @@ class ModuleScope {
   Map<Object, ModuleScope> get children => UnmodifiableMapView(_children);
   Map<Tuple2<Type, Object>, Module> get modules => UnmodifiableMapView(_modules);
 
+  String _canonicalName;
+
   String get canonicalName {
-    if (parent == null) {
-      return '';
-    } else {
-      final key = children.entries.singleWhere(
-        (element) => element.value == this,
-      ).key;
-      return '${parent.canonicalName}/$key';
+    if (_canonicalName == null) {
+      if (parent == null) {
+        _canonicalName = '';
+      } else {
+        final key = children.entries.singleWhere((element) => element.value == this).key;
+        _canonicalName = '${parent.canonicalName}/$key';
+      }
     }
+    return _canonicalName;
   }
 
   ModuleScope push(Object id) {
