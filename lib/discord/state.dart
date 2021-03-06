@@ -53,7 +53,7 @@ abstract class DiscordState {
   void _onEvent(String name, dynamic data) {
     switch (name) {
       case 'READY':
-        _userSubject.value = _updateUserEntity(data['user']);
+        _userSubject.add(_updateUserEntity(data['user']));
         (data['guilds'] as List<Object>).forEach(_updateGuildEntity);
         break;
       case 'GUILD_CREATE':

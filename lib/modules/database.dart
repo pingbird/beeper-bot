@@ -45,7 +45,7 @@ class DatabaseModule extends Module with StatusLoader {
     return con.execute(
       '''insert into Config (Key, Value) values (@Key, @Value) on conflict (Key) do update set Value = @Value''',
       substitutionValues: <String, dynamic>{
-        'Key': jsonEncode(key),
+        'Key': key,
         'Value': jsonEncode(value),
       },
     );

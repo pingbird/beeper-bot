@@ -5,10 +5,10 @@ import 'dart:io';
 
 import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules/status.dart';
-import 'package:meta/meta.dart';
-import 'package:shelf_static/shelf_static.dart';
-import 'package:shelf/shelf.dart';
+import 'package:shelf_proxy/shelf_proxy.dart';
 import 'package:shelf/shelf_io.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' as path;
 import 'package:pedantic/pedantic.dart';
 
 import 'package:beeper/beeper.dart';
@@ -32,24 +32,27 @@ class AdminClient {
 @Metadata(name: 'admin')
 class AdminModule extends Module with StatusLoader, Disposer {
   final Uri uri;
-  final String assetPath;
+  final bool development;
+  final int adminPort;
+  final int webdevPort;
 
   AdminModule({
     @required String uri,
-    @required this.assetPath,
-  }) : uri = Uri.parse('//$uri');
+    bool development,
+    int adminPort,
+    int webdevPort,
+  }) :
+    uri = Uri.parse(uri),
+    development = development ?? false,
+    adminPort = adminPort ?? 4050,
+    webdevPort = webdevPort ?? 4051;
 
   static const maxLogHistory = 4096;
   final logHistory = Queue<LogEvent>();
 
   HttpServer server;
-  Handler staticHandler;
 
-  Future<void> _handleStatic(HttpRequest client) async {
-    return handleRequest(client, (client) {
-      return staticHandler(client);
-    });
-  }
+  Process webdevProcess;
 
   Future<void> _handleError(HttpRequest request, [int code = 500, String text]) async {
     final res = request.response;
@@ -109,15 +112,44 @@ class AdminModule extends Module with StatusLoader, Disposer {
     await super.load();
 
     startTime ??= DateTime.now();
-    server = await HttpServer.bind(uri.host, uri.port);
-    staticHandler = createStaticHandler(assetPath, defaultDocument: 'index.html');
+    server = await HttpServer.bind('127.0.0.1', adminPort);
+    log('Listening on $adminPort');
+    log('Visit at $uri');
+
+    if (development) {
+      log('Starting webdev');
+
+      webdevProcess = await Process.start(
+        Platform.executable,
+        ['pub', 'global', 'run', 'webdev', 'serve', 'web:$webdevPort'],
+        workingDirectory: path.join(Directory.current.path, 'admin'),
+      );
+
+      const LineSplitter().bind(
+        utf8.decoder.bind(webdevProcess.stdout),
+      ).listen((event) {
+        if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
+          log(event.codeUnits.toString());
+        }
+      });
+
+      const LineSplitter().bind(
+        utf8.decoder.bind(webdevProcess.stderr),
+      ).listen((event) {
+        log(event, level: LogLevel.warning);
+      });
+
+      webdevProcess.exitCode.then((exitCode) {
+        log('webdev exited with status code $exitCode', level: LogLevel.warning);
+      });
+    }
 
     queueDispose(server.listen((client) async {
       try {
         if (client.uri.path == '/ws') {
           await _handleWebsocket(client);
-        } else {
-          await _handleStatic(client);
+        } else if (development) {
+          await handleRequest(client, proxyHandler('http://localhost:$webdevPort'));
         }
       } catch (e, bt) {
         await _handleError(client, 500, '$e\n$bt');
@@ -152,7 +184,8 @@ class AdminModule extends Module with StatusLoader, Disposer {
 
   @override
   Future<void> unload() async {
-    await super.unload();
+    webdevProcess?.kill();
     statuses.clear();
+    await super.unload();
   }
 }

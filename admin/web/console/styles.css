@@ -194,3 +194,17 @@ body {
   color: #ffffff;
   word-break: break-word;
 }
+
+.discord-signin-button {
+  color: #fff;
+  background-color: #809c5f;
+  font-family: 'Nunito', sans-serif;
+  text-rendering: optimizeLegibility;
+  font-size: 16px;
+  border-radius: 3px;
+  padding: 8px 16px;
+  margin-left: 24px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

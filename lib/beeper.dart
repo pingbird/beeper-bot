@@ -18,6 +18,8 @@ class Bot extends ModuleSystem {
 
   dynamic config;
 
+  bool get isDevelopment => config['development'] == true;
+
   Bot({@required this.config}) {
     logger = Logger((e) {
       if (e.level.index >= LogLevel.warning.index) {
@@ -45,15 +47,6 @@ class Bot extends ModuleSystem {
       } catch (e) {
         version = 'unknown';
       }
-    }
-
-    if (config['development'] == true) {
-      logger.log('bot', 'Hot reload started');
-      await HotReloader.create(
-        onAfterReload: (ctx) {
-          logger.log('bot', 'Hot reload finished with ${ctx.result}');
-        }
-      );
     }
 
     scope = ModuleScope(system: this, parent: null);

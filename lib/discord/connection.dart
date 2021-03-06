@@ -145,7 +145,7 @@ class DiscordConnection {
 
     if (op == Op.dispatch) {
       if (name == 'READY') {
-        _stateSubject.value = DiscordConnectionState.connected();
+        _stateSubject.add(DiscordConnectionState.connected());
         retries = 0;
       }
       logger.log('discord', '< $message', level: LogLevel.verbose);
@@ -172,7 +172,7 @@ class DiscordConnection {
 
   void start() async {
     while (true) {
-      _stateSubject.value = DiscordConnectionState.started();
+      _stateSubject.add(DiscordConnectionState.started());
       retries = min(20, retries + 1);
       int remaining;
       int resetAfter;
@@ -186,9 +186,9 @@ class DiscordConnection {
         logger.log('discord', 'resetAfter: ${resetAfter / 1000}s');
 
         if (remaining < 10) {
-          _stateSubject.value = DiscordConnectionState.waiting(
+          _stateSubject.add(DiscordConnectionState.waiting(
             reason: 'Ran out of connects, waiting for $resetAfter ms.',
-          );
+          ));
           await Future<void>.delayed(Duration(milliseconds: resetAfter));
         }
 
@@ -200,10 +200,10 @@ class DiscordConnection {
         if (_socket.closeReason != null && _socket.closeReason.isNotEmpty) {
           reason += ' (${_socket.closeReason})';
         }
-        _stateSubject.value = DiscordConnectionState.waiting(reason: reason);
+        _stateSubject.add(DiscordConnectionState.waiting(reason: reason));
       } catch (e, bt) {
         logger.log('discord', 'Failed to connect to gateway: $e\n$bt', level: LogLevel.error);
-        _stateSubject.value = DiscordConnectionState.error(reason: '$e\n$bt');
+        _stateSubject.add(DiscordConnectionState.error(reason: '$e\n$bt'));
       }
       _heartbeatTimer?.cancel();
       _heartbeatTimer = null;
