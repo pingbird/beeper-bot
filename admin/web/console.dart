@@ -11,18 +11,36 @@ import 'package:admin/client.dart';
 void tabBarSetup() {
   final tabBar = querySelector('#tab-bar');
   final tabView = querySelector('#tab-view');
-  for (var i = 0; i < tabBar.children.length; i++) {
-    tabBar.children[i].onClick.listen((event) {
-      for (var j = 0; j < tabBar.children.length; j++) {
-        if (j == i) {
-          tabView.children[j].classes.add('active');
-          tabBar.children[j].classes.add('active');
-        } else {
-          tabView.children[j].classes.remove('active');
-          tabBar.children[j].classes.remove('active');
-        }
+
+  void selectTab(int i) {
+    for (var j = 0; j < tabBar.children.length; j++) {
+      if (j == i) {
+        tabView.children[j].classes.add('active');
+        tabBar.children[j].classes.add('active');
+      } else {
+        tabView.children[j].classes.remove('active');
+        tabBar.children[j].classes.remove('active');
       }
+    }
+  }
+
+  final tabNames = <String>[];
+
+  String filterTabName(String str) {
+    return str.toLowerCase().replaceAll('#', '').replaceAll(' ', '-');
+  }
+
+  for (var i = 0; i < tabBar.children.length; i++) {
+    tabNames.add(filterTabName(tabBar.children[i].text));
+    tabBar.children[i].onClick.listen((event) {
+      window.location.hash = tabNames[i];
+      selectTab(i);
     });
+  }
+
+  final index = tabNames.indexOf(filterTabName(window.location.hash));
+  if (index >= 0) {
+    selectTab(index);
   }
 }
 
