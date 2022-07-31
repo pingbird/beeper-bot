@@ -216,7 +216,7 @@ class DiscordServer {
           request.requestedUri.pathSegments.where((e) => e != '').toList());
       if (path != null) {
         try {
-          final dynamic result = await _handle(request, path);
+          final Object /*?*/ result = await _handle(request, path);
           if (result == _upgraded) {
             return;
           } else if (result != null) {

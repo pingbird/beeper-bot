@@ -7,8 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 
 class DiscordHttpError {
-  final http.BaseRequest request;
-  final http.BaseResponse response;
+  final http.BaseRequest/*!*/ request;
+  final http.BaseResponse/*!*/ response;
 
   DiscordHttpError({
     final this.request,
@@ -26,8 +26,8 @@ class HttpService {
   final client = http.Client();
 
   final Uri endpoint;
-  final String authorization;
-  final String userAgent;
+  final String/*!*/ authorization;
+  final String/*!*/ userAgent;
 
   final buckets = <String, HttpBucket>{};
 

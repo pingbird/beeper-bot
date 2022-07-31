@@ -16,7 +16,7 @@ class Metadata {
 
   const Metadata({
     @required this.name,
-    this.lazyLoad,
+    @required this.lazyLoad,
     this.factory,
     this.loadable = false,
     this.configurable = true,
@@ -31,11 +31,11 @@ abstract class ModuleSystem {
 }
 
 abstract class Module {
-  ModuleSystem system;
-  ModuleScope scope;
+  ModuleSystem /*!*/ system;
+  ModuleScope /*!*/ scope;
 
   Completer<void> _loaded;
-  bool get loaded => _loaded.isCompleted;
+  bool get loaded => _loaded?.isCompleted ?? false;
 
   String get canonicalName {
     final key = scope.modules.entries
@@ -43,7 +43,7 @@ abstract class Module {
           (element) => element.value == this,
         )
         .key;
-    final metadata = moduleMetadata[key.item1];
+    final metadata = moduleMetadata[key.item1] /*!*/;
     final scopeName = scope.canonicalName;
     if (key.item2 == null) {
       return '$scopeName/${metadata.name}';
@@ -100,7 +100,7 @@ class ModuleScope {
 
   String _canonicalName;
 
-  String get canonicalName {
+  String /*!*/ get canonicalName {
     if (_canonicalName == null) {
       if (parent == null) {
         _canonicalName = '';
@@ -170,7 +170,7 @@ class ModuleScope {
     }
   }
 
-  T get<T extends Module>({Object id}) => getWith(T, id: id) as T;
+  T get<T extends Module /*!*/ >({Object id}) => getWith(T, id: id) as T;
 
   Future<Module> requireWith(Type T, [Object id]) async {
     if (T == Module) {
@@ -200,12 +200,7 @@ class ModuleScope {
   }
 
   Future<T> require<T extends Module>({Object id}) async {
-    final result = await requireWith(T, id);
-    if (result is T) {
-      return result;
-    } else {
-      return (result as Future<Module>).then((v) => v as T);
-    }
+    return await requireWith(T, id) as T;
   }
 
   Future<void> injectWith(Type T, Module module, {Object id}) async {

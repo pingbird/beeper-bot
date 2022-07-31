@@ -12,7 +12,7 @@ extension ModuleBotExtension on Module {
 }
 
 class Bot extends ModuleSystem {
-  String version;
+  String/*!*/ version;
 
   dynamic config;
 

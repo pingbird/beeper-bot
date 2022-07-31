@@ -39,8 +39,7 @@ class CommandsBuilder extends AggregateBuilder {
         for (final method in cls.methods) {
           final commandInfo = method.getMetadata(commandType);
           if (commandInfo == null) continue;
-          imports.putIfAbsent(library, () => {});
-          imports[library].add(cls.name);
+          imports.putIfAbsent(library, () => {}).add(cls.name);
 
           final commandName = commandInfo.getField('name').isNull
               ? method.name
@@ -51,9 +50,7 @@ class CommandsBuilder extends AggregateBuilder {
               : commandInfo
                   .getField('alias')
                   .toSetValue()
-                  .map(
-                    (s) => s.toStringValue(),
-                  )
+                  .map((s) => s.toStringValue() /*!*/)
                   .toSet();
 
           commandAliases.add(commandName);

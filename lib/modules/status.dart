@@ -27,7 +27,7 @@ class StatusModule extends Module {
 
 mixin StatusLoader on Module {
   StatusModule statusModule;
-  dynamic _status;
+  Object /*?*/ _status;
   bool _loaded = false;
 
   dynamic get status => _status;

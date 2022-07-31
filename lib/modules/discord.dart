@@ -5,7 +5,7 @@ import 'package:beeper/secrets.dart';
 import 'package:meta/meta.dart';
 
 mixin DiscordLoader on Module {
-  Discord discord;
+  Discord/*!*/ discord;
 
   @override
   Future<void> load() async {
@@ -16,9 +16,9 @@ mixin DiscordLoader on Module {
 
 @Metadata(name: 'discord')
 class DiscordModule extends Module with StatusLoader {
-  Discord discord;
+  Discord/*!*/ discord;
 
-  final String token;
+  final String/*!*/ token;
   final String endpoint;
 
   DiscordModule({

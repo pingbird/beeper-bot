@@ -42,10 +42,10 @@ abstract class DiscordState {
   Stream<DiscordMessage> get onMessageCreate => _onMessageCreate.stream;
   final _onMessageCreate = StreamController<DiscordMessage>.broadcast();
 
-  Stream<Map<String, dynamic>> get onRawMessageCreate =>
+  Stream<Map<String, dynamic>/*!*/> get onRawMessageCreate =>
       _onRawMessageCreate.stream;
   final _onRawMessageCreate =
-      StreamController<Map<String, dynamic>>.broadcast();
+      StreamController<Map<String, dynamic>/*!*/>.broadcast();
 
   DiscordState({
     @required DiscordConnection connection,
@@ -53,7 +53,7 @@ abstract class DiscordState {
     _connection.onEvent = _onEvent;
   }
 
-  void _onEvent(String name, dynamic data) {
+  void _onEvent(String/*!*/ name, dynamic data) {
     switch (name) {
       case 'READY':
         _userSubject.add(_updateUserEntity(data['user']));
@@ -96,7 +96,7 @@ abstract class DiscordState {
   ValueStream<DiscordConnectionState> get connectionStates =>
       _connection.states;
 
-  final _userSubject = BehaviorSubject<DiscordUser>();
+  final _userSubject = BehaviorSubject<DiscordUser/*?*/>();
 
   final _users = <int, DiscordUser>{};
   final _guilds = <int, DiscordGuild>{};

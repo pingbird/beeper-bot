@@ -11,11 +11,11 @@ import 'package:postgres/postgres.dart';
 class DatabaseModule extends Module with StatusLoader {
   PostgreSQLConnection con;
 
-  final String host;
-  final int port;
-  final String user;
-  final String password;
-  final String database;
+  final String/*!*/ host;
+  final int/*!*/ port;
+  final String/*!*/ user;
+  final String/*!*/ password;
+  final String/*!*//*!*/ database;
 
   DatabaseModule({
     @required this.host,
@@ -50,7 +50,7 @@ class DatabaseModule extends Module with StatusLoader {
     );
   }
 
-  Map<String, dynamic> _versions;
+  Map<String, dynamic>/*!*/ _versions;
 
   Future<void> _flushVersions() => setConf('_versions', _versions);
 

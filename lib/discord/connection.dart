@@ -92,7 +92,7 @@ class DiscordConnectionState {
 }
 
 class DiscordConnection {
-  final HttpService http;
+  final HttpService/*!*/ http;
   final String _token;
 
   DiscordConnection({
@@ -141,7 +141,7 @@ class DiscordConnection {
   void _handle(dynamic message) {
     final dynamic payload = jsonDecode(message as String);
     final dynamic data = payload['d'];
-    final op = payload['op'] as int;
+    final op = payload['op'] as int/*!*/;
     _heartbeatSequence = payload['s'] as int ?? _heartbeatSequence;
     final name = payload['t'] as String;
 
@@ -182,8 +182,8 @@ class DiscordConnection {
       try {
         final dynamic response = await http.get('/gateway/bot');
         assert(response['shards'] == 1, 'Multiple shards not supported');
-        remaining = response['session_start_limit']['remaining'] as int;
-        resetAfter = response['session_start_limit']['reset_after'] as int;
+        remaining = response['session_start_limit']['remaining'] as int/*!*/;
+        resetAfter = response['session_start_limit']['reset_after'] as int/*!*/;
 
         logger.log('discord', 'remaining: $remaining');
         logger.log('discord', 'resetAfter: ${resetAfter / 1000}s');
