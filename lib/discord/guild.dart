@@ -168,7 +168,7 @@ class DiscordChannel {
     position = data['position'] as int;
     name = data['name'] as String?;
     topic = data['topic'] as String?;
-    nsfw = data['nsfw'] as bool;
+    nsfw = data['nsfw'] as bool? ?? false;
   }
 
   Future<DiscordMessage> send(String content) async {

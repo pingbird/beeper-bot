@@ -70,7 +70,7 @@ class Bot extends ModuleSystem {
           );
         }
         final metadata = candidates.single;
-        if (!metadata.value.lazyLoad) {
+        if (!metadata.value.lazyLoad!) {
           throw StateError(
             'Attempted to load module from config that cannot be lazy-loaded: "${metadata.value.name}"',
           );

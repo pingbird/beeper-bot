@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
@@ -56,14 +57,37 @@ class DatabaseModule extends Module with StatusLoader {
   @override
   Future<void> load() async {
     await super.load();
-    con = PostgreSQLConnection(
-      host,
-      port,
-      database,
-      username: user,
-      password: decryptSecret('postgre-password', password),
-    );
-    await con.open();
+    try {
+      con = PostgreSQLConnection(
+        host,
+        port,
+        database,
+        username: user,
+        password: decryptSecret('postgre-password', password),
+      );
+      await con.open();
+    } on SocketException catch (e) {
+      if (!e.message.contains('refused')) rethrow;
+
+      final docker = await Process.start(
+        'docker',
+        ['compose', 'up', '-d'],
+        runInShell: true,
+      );
+      docker.stdout.listen(stdout.add);
+      docker.stderr.listen(stderr.add);
+      await docker.exitCode;
+      await Future<void>.delayed(const Duration(seconds: 5));
+
+      con = PostgreSQLConnection(
+        host,
+        port,
+        database,
+        username: user,
+        password: decryptSecret('postgre-password', password),
+      );
+      await con.open();
+    }
     log('Opened database');
 
     await con.execute('''

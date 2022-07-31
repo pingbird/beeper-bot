@@ -72,7 +72,7 @@ class ModulesBuilder extends AggregateBuilder {
                 'Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
           }
           args.add(
-              '${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: false)}');
+              '${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: true)}');
         }
       }
 

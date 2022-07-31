@@ -15,3 +15,6 @@ doc/api/
 
 # Beeper configs
 config/
+
+# Docker
+postgres/

@@ -21,7 +21,7 @@ extension DiscordStateInternal on DiscordState {
       _updateMemberEntity(data, guild: guild, user: user);
   DiscordMessage wrapMessage(dynamic data) => _wrapMessage(data);
 
-  DiscordUser? get internalUser => _userSubject.value;
+  DiscordUser? get internalUser => _userSubject.valueOrNull;
 
   Map<int, DiscordUser> get internalUsers => _users;
   Map<int, DiscordGuild> get internalGuilds => _guilds;
@@ -49,14 +49,14 @@ abstract class DiscordState {
   DiscordState({
     required DiscordConnection connection,
   }) : _connection = connection {
-    _connection.onEvent = _onEvent as void Function(String?, Object?);
+    _connection.onEvent = _onEvent;
   }
 
   void _onEvent(String name, dynamic data) {
     switch (name) {
       case 'READY':
         _userSubject.add(_updateUserEntity(data['user']));
-        (data['guilds'] as List<Object>).forEach(_updateGuildEntity);
+        (data['guilds'] as List<dynamic>).forEach(_updateGuildEntity);
         break;
       case 'GUILD_CREATE':
         _updateGuildEntity(data);

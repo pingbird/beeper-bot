@@ -9,14 +9,14 @@ export 'package:beeper/gen/modules.g.dart';
 
 class Metadata {
   final String name;
-  final bool lazyLoad;
+  final bool? lazyLoad;
   final Module Function(dynamic data)? factory;
   final bool loadable;
   final bool configurable;
 
   const Metadata({
     required this.name,
-    required this.lazyLoad,
+    this.lazyLoad,
     this.factory,
     this.loadable = false,
     this.configurable = true,
@@ -89,8 +89,7 @@ class ModuleScope {
   });
 
   final _children = <Object, ModuleScope>{};
-  final Map<Tuple2<Type, Object?>, Module> _modules =
-      <Tuple2<Type, Object>, Module>{};
+  final _modules = <Tuple2<Type, Object?>, Module>{};
   ModuleScope? _inherit;
 
   Map<Object, ModuleScope> get children => UnmodifiableMapView(_children);
@@ -185,7 +184,7 @@ class ModuleScope {
     if (metadata == null) {
       throw StateError('Could not find metadata for module type $T');
     }
-    if (metadata.lazyLoad) {
+    if (metadata.lazyLoad!) {
       module = metadata.factory!(null);
     } else {
       throw StateError('Module $T not found');
@@ -212,7 +211,7 @@ class ModuleScope {
     if (_modules.containsKey(key)) {
       throw StateError('Cannot inject $module: module already exists');
     }
-    _modules[Tuple2(T, id)] = module;
+    _modules[key] = module;
     await module._performLoad(
       system: system,
       scope: this,

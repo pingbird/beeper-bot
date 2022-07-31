@@ -36,7 +36,7 @@ class Discord extends DiscordState {
           connection: DiscordConnection(
             token: token,
             http: HttpService(
-              endpoint: endpoint ?? Uri.parse('https://discord.com/api/v7'),
+              endpoint: endpoint ?? Uri.parse('https://discord.com/api/v9'),
               userAgent: userAgent,
               authorization: 'Bot ${token.trim()}',
             ),

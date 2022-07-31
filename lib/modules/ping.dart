@@ -9,6 +9,6 @@ class PingModule extends Module with CommandsLoader {
 
   @Command(alias: {'p'})
   void ping(CommandInvocation cmd) {
-    cmd.writeln('pong');
+    cmd.writeln(response ?? 'pong');
   }
 }

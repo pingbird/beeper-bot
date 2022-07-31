@@ -99,7 +99,7 @@ class DiscordConnection {
     required this.http,
   }) : _token = token.trim();
 
-  late void Function(String? name, Object? data) onEvent;
+  late void Function(String name, dynamic data) onEvent;
 
   late WebSocket _socket;
   int? _heartbeatInterval;
@@ -150,7 +150,7 @@ class DiscordConnection {
         retries = 0;
       }
       logger.log('discord', '< $message', level: LogLevel.verbose);
-      onEvent(name, data);
+      onEvent(name!, data);
     } else if (op == Op.hello) {
       _heartbeatInterval = data['heartbeat_interval'] as int?;
       _sendHeartbeat();
