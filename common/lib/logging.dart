@@ -48,7 +48,7 @@ class Logger {
 
   Logger(this.onEvent);
 
-  void log(String name, String content, {DateTime time, LogLevel level}) {
+  void log(String name, String content, {DateTime? time, LogLevel? level}) {
     onEvent(
       LogEvent(
         time ?? DateTime.now(),
@@ -59,7 +59,7 @@ class Logger {
     );
   }
 
-  T wrap<T>(T Function() fn) => runZonedGuarded(
+  T? wrap<T>(T Function() fn) => runZonedGuarded(
         fn,
         (e, bt) {
           log('exception', '$e\n$bt', level: LogLevel.error);
