@@ -6,7 +6,6 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart' show DartFormatter;
 import 'package:glob/glob.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' show join;
 
 class AggregateContext {
@@ -14,8 +13,8 @@ class AggregateContext {
   final BuildStep buildStep;
 
   AggregateContext({
-    @required this.builder,
-    @required this.buildStep,
+    required this.builder,
+    required this.buildStep,
   });
 
   Future<void> output(String name, String contents) {
@@ -42,10 +41,10 @@ class AggregateContext {
 }
 
 extension ElementExtension on Element {
-  DartObject getMetadata(DartType type) {
+  DartObject? getMetadata(DartType type) {
     for (final data in metadata) {
-      final value = data.computeConstantValue();
-      if (library.typeSystem.isSubtypeOf(value.type, type)) {
+      final value = data.computeConstantValue()!;
+      if (library!.typeSystem.isSubtypeOf(value.type!, type)) {
         return value;
       }
     }

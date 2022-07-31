@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:yaml/yaml.dart';
 
 extension ModuleBotExtension on Module {
@@ -12,13 +11,13 @@ extension ModuleBotExtension on Module {
 }
 
 class Bot extends ModuleSystem {
-  String/*!*/ version;
+  late String version;
 
   dynamic config;
 
   bool get isDevelopment => config['development'] == true;
 
-  Bot({@required this.config}) {
+  Bot({required this.config}) {
     logger = Logger((e) {
       if (e.level.index >= LogLevel.warning.index) {
         stderr.writeln(e);
@@ -29,7 +28,7 @@ class Bot extends ModuleSystem {
     });
   }
 
-  Logger logger;
+  late Logger logger;
   final _logEvents = StreamController<LogEvent>.broadcast();
 
   Future<void> start() async {
@@ -76,7 +75,7 @@ class Bot extends ModuleSystem {
             'Attempted to load module from config that cannot be lazy-loaded: "${metadata.value.name}"',
           );
         }
-        final module = metadata.value.factory(config);
+        final module = metadata.value.factory!(config);
         await scope.injectWith(metadata.key, module, id: config['id']);
       }
     });

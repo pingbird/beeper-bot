@@ -13,8 +13,8 @@ class ModulesBuilder extends AggregateBuilder {
   @override
   Future<void> buildAggregate(AggregateContext context) async {
     final modulesLibrary = await context.findLibs('lib/modules.dart').single;
-    final metadataType = modulesLibrary.getType('Metadata').thisType;
-    final moduleType = modulesLibrary.getType('Module').thisType;
+    final metadataType = modulesLibrary.getType('Metadata')!.thisType;
+    final moduleType = modulesLibrary.getType('Module')!.thisType;
 
     final libs = <LibraryElement, List<ClassElement>>{};
 
@@ -58,10 +58,10 @@ class ModulesBuilder extends AggregateBuilder {
         throw StateError(
             'Module ${cls.name} from ${cls.library.source} does not have a default constructor');
       }
-      final ctorArgs = cls.unnamedConstructor.parameters;
+      final ctorArgs = cls.unnamedConstructor!.parameters;
 
       final args = <String>[];
-      var lazyLoad = metadata.getField('lazyLoad').toBoolValue();
+      var lazyLoad = metadata.getField('lazyLoad')!.toBoolValue();
 
       if (ctorArgs.length == 1 && ctorArgs.first.type.isDynamic) {
         args.add('data');
@@ -79,7 +79,7 @@ class ModulesBuilder extends AggregateBuilder {
       lazyLoad ??= true;
 
       out.writeln('$name: Metadata('
-              'name: \'${escape(metadata.getField('name').toStringValue())}\', '
+              'name: \'${escape(metadata.getField('name')!.toStringValue()!)}\', '
               'lazyLoad: $lazyLoad, ' +
           (lazyLoad
               ? 'factory: (dynamic data) => $name(${args.join(', ')})),'
@@ -96,8 +96,8 @@ class ModulesBuilder extends AggregateBuilder {
           continue;
         }
 
-        final metadata = cls.getMetadata(metadataType);
-        if (!metadata.getField('loadable').toBoolValue()) {
+        final metadata = cls.getMetadata(metadataType)!;
+        if (!metadata.getField('loadable')!.toBoolValue()!) {
           continue;
         }
 

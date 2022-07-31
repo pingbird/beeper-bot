@@ -66,7 +66,7 @@ String _decrypt(String password, String ciphertext) {
   return utf8.decode(plaintextBytes);
 }
 
-String decryptSecret(String name, String/*!*/ value) {
+String decryptSecret(String name, String value) {
   final key = Platform.environment['BEEPER_SECRET_KEY'];
   if (key == null) return value;
   return _decrypt('$name/$key', value);
@@ -74,6 +74,6 @@ String decryptSecret(String name, String/*!*/ value) {
 
 String encryptSecret(String name, String value) {
   final key = Platform.environment['BEEPER_SECRET_KEY'];
-  assert(key != null, 'Secret key not provided');
+  assert(key != null, 'BEEPER_SECRET_KEY not provided');
   return _encrypt('$name/$key', value);
 }

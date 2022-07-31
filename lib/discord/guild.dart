@@ -2,32 +2,31 @@ import 'dart:collection';
 
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/discord/state.dart';
-import 'package:meta/meta.dart';
 
 class DiscordGuild {
   final Discord discord;
   final int id;
 
   DiscordGuild({
-    @required this.discord,
-    @required this.id,
+    required this.discord,
+    required this.id,
   });
 
-  String name;
+  String? name;
   bool available = false;
   bool destroyed = false;
 
   Map<int, DiscordMember> get members =>
-      UnmodifiableMapView(discord.internalMembers[id]);
+      UnmodifiableMapView(discord.internalMembers[id]!);
 
   void updateEntity(dynamic data) {
-    name = data['name'] as String ?? name;
+    name = data['name'] as String? ?? name;
     available = data['unavailable'] != true;
   }
 }
 
 class UserFlags {
-  final int /*!*/ value;
+  final int value;
 
   UserFlags(this.value);
 
@@ -51,27 +50,27 @@ class DiscordUser {
   final int id;
 
   DiscordUser({
-    @required this.discord,
-    @required this.id,
+    required this.discord,
+    required this.id,
   });
 
-  String /*!*/ name;
-  int /*!*/ discriminator;
-  String /*?*/ avatarHash;
-  bool /*!*/ bot;
-  bool /*!*/ system;
-  bool /*!*/ mfaEnabled;
-  String /*?*/ locale;
-  UserFlags /*!*/ flags;
+  late String name;
+  late int discriminator;
+  late String? avatarHash;
+  late bool bot;
+  late bool system;
+  late bool mfaEnabled;
+  late String? locale;
+  late UserFlags flags;
 
   void updateEntity(dynamic data) {
     name = data['username'] as String;
     discriminator = int.parse(data['discriminator'] as String);
-    avatarHash = data['avatar'] as String /*?*/;
-    bot = data['bot'] as bool ?? false;
-    system = data['system'] as bool ?? false;
-    mfaEnabled = data['mfa_enabled'] as bool ?? false;
-    locale = data['locale'] as String /*?*/;
+    avatarHash = data['avatar'] as String?;
+    bot = data['bot'] as bool? ?? false;
+    system = data['system'] as bool? ?? false;
+    mfaEnabled = data['mfa_enabled'] as bool? ?? false;
+    locale = data['locale'] as String?;
     if (data['public_flags'] != null) {
       flags = UserFlags(data['public_flags'] as int);
     } else {
@@ -80,8 +79,8 @@ class DiscordUser {
   }
 
   Uri avatar({
-    String format,
-    int size,
+    String? format,
+    int? size,
   }) {
     if (avatarHash == null) {
       return Uri(
@@ -90,7 +89,7 @@ class DiscordUser {
         path: 'embed/avatars/${discriminator % 5}.png',
       );
     } else {
-      format ??= avatarHash.startsWith('a_') ? 'gif' : 'png';
+      format ??= avatarHash!.startsWith('a_') ? 'gif' : 'png';
       return Uri(
         scheme: 'https',
         host: 'cdn.discordapp.com',
@@ -109,21 +108,21 @@ class DiscordUser {
 
 class DiscordMember {
   final DiscordGuild guild;
-  final DiscordUser /*?*/ user;
+  final DiscordUser? user;
 
   DiscordMember({
-    @required this.guild,
-    @required this.user,
+    required this.guild,
+    required this.user,
   });
 
-  String /*?*/ nick;
-  DateTime joinedAt;
+  String? nick;
+  DateTime? joinedAt;
 
-  String get name => nick ?? user.name;
-  int get id => user.id;
+  String get name => nick ?? user!.name;
+  int get id => user!.id;
 
   void updateEntity(dynamic data) {
-    nick = data['nick'] as String /*?*/;
+    nick = data['nick'] as String?;
     joinedAt = DateTime.parse(data['joinedAt'] as String);
   }
 }
@@ -151,24 +150,24 @@ class DiscordChannel {
   final Discord discord;
   final int id;
   final DiscordChannelKind kind;
-  final DiscordGuild /*?*/ guild;
+  final DiscordGuild? guild;
 
-  int /*!*/ position;
-  String /*?*/ name;
-  String /*?*/ topic;
-  bool /*!*/ nsfw;
+  late int position;
+  String? name;
+  String? topic;
+  late bool nsfw;
 
   DiscordChannel({
-    @required this.discord,
-    @required this.id,
-    @required this.kind,
+    required this.discord,
+    required this.id,
+    required this.kind,
     this.guild,
   });
 
   void updateEntity(dynamic data) {
     position = data['position'] as int;
-    name = data['name'] as String;
-    topic = data['topic'] as String;
+    name = data['name'] as String?;
+    topic = data['topic'] as String?;
     nsfw = data['nsfw'] as bool;
   }
 
@@ -185,8 +184,8 @@ class DiscordChannel {
 }
 
 class DiscordEmbedProvider {
-  final String name;
-  final String url;
+  final String? name;
+  final String? url;
 
   DiscordEmbedProvider({
     this.name,
@@ -194,8 +193,8 @@ class DiscordEmbedProvider {
   });
 
   DiscordEmbedProvider.fromJson(dynamic data)
-      : name = data['name'] as String,
-        url = data['url'] as String;
+      : name = data['name'] as String?,
+        url = data['url'] as String?;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'name': name,
@@ -204,23 +203,23 @@ class DiscordEmbedProvider {
 }
 
 class DiscordEmbedSource {
-  final String url;
-  final String cdnUrl;
-  final int width;
-  final int height;
+  final String? url;
+  final String? cdnUrl;
+  final int? width;
+  final int? height;
 
   DiscordEmbedSource({
-    @required this.url,
+    required this.url,
     this.cdnUrl,
     this.width,
     this.height,
   });
 
   DiscordEmbedSource.fromJson(dynamic data)
-      : url = data['url'] as String,
-        cdnUrl = data['cdnUrl'] as String,
-        width = data['width'] as int,
-        height = data['height'] as int;
+      : url = data['url'] as String?,
+        cdnUrl = data['cdnUrl'] as String?,
+        width = data['width'] as int?,
+        height = data['height'] as int?;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'url': url,
@@ -231,20 +230,20 @@ class DiscordEmbedSource {
 }
 
 class DiscordEmbedFooter {
-  final String text;
-  final String iconUrl;
-  final String iconCdnUrl;
+  final String? text;
+  final String? iconUrl;
+  final String? iconCdnUrl;
 
   DiscordEmbedFooter({
-    @required this.text,
+    required this.text,
     this.iconUrl,
     this.iconCdnUrl,
   });
 
   DiscordEmbedFooter.fromJson(dynamic data)
-      : text = data['text'] as String,
-        iconUrl = data['iconUrl'] as String,
-        iconCdnUrl = data['iconCdnUrl'] as String;
+      : text = data['text'] as String?,
+        iconUrl = data['iconUrl'] as String?,
+        iconCdnUrl = data['iconCdnUrl'] as String?;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'text': text,
@@ -254,10 +253,10 @@ class DiscordEmbedFooter {
 }
 
 class DiscordEmbedAuthor {
-  final String name;
-  final String url;
-  final String iconUrl;
-  final String iconCdnUrl;
+  final String? name;
+  final String? url;
+  final String? iconUrl;
+  final String? iconCdnUrl;
 
   DiscordEmbedAuthor({
     this.name,
@@ -267,10 +266,10 @@ class DiscordEmbedAuthor {
   });
 
   DiscordEmbedAuthor.fromJson(dynamic data)
-      : name = data['name'] as String,
-        url = data['url'] as String,
-        iconUrl = data['iconUrl'] as String,
-        iconCdnUrl = data['iconCdnUrl'] as String;
+      : name = data['name'] as String?,
+        url = data['url'] as String?,
+        iconUrl = data['iconUrl'] as String?,
+        iconCdnUrl = data['iconCdnUrl'] as String?;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         if (name != null) 'name': name,
@@ -281,9 +280,9 @@ class DiscordEmbedAuthor {
 }
 
 class DiscordEmbedField {
-  final String name;
-  final String value;
-  final bool inline;
+  final String? name;
+  final String? value;
+  final bool? inline;
 
   DiscordEmbedField({
     this.name,
@@ -292,31 +291,31 @@ class DiscordEmbedField {
   });
 
   DiscordEmbedField.fromJson(dynamic data)
-      : name = data['name'] as String,
-        value = data['value'] as String,
-        inline = data['inline'] as bool ?? false;
+      : name = data['name'] as String?,
+        value = data['value'] as String?,
+        inline = data['inline'] as bool? ?? false;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'name': name,
         'value': value,
-        if (inline) 'inline': true,
+        if (inline!) 'inline': true,
       };
 }
 
 class DiscordEmbed {
-  final String title;
-  final String type;
-  final String description;
-  final String url;
-  final DateTime timestamp;
-  final int color;
-  final DiscordEmbedFooter footer;
-  final DiscordEmbedSource thumbnail;
-  final DiscordEmbedProvider provider;
-  final DiscordEmbedSource image;
-  final DiscordEmbedSource video;
-  final DiscordEmbedAuthor author;
-  final List<DiscordEmbedField> fields;
+  final String? title;
+  final String? type;
+  final String? description;
+  final String? url;
+  final DateTime? timestamp;
+  final int? color;
+  final DiscordEmbedFooter? footer;
+  final DiscordEmbedSource? thumbnail;
+  final DiscordEmbedProvider? provider;
+  final DiscordEmbedSource? image;
+  final DiscordEmbedSource? video;
+  final DiscordEmbedAuthor? author;
+  final List<DiscordEmbedField>? fields;
 
   DiscordEmbed({
     this.title,
@@ -335,12 +334,12 @@ class DiscordEmbed {
   });
 
   DiscordEmbed.fromJson(dynamic data)
-      : title = data['title'] as String,
-        type = data['type'] as String,
-        description = data['description'] as String,
-        url = data['url'] as String,
+      : title = data['title'] as String?,
+        type = data['type'] as String?,
+        description = data['description'] as String?,
+        url = data['url'] as String?,
         timestamp = DateTime.parse(data['timestamp'] as String),
-        color = data['color'] as int,
+        color = data['color'] as int?,
         footer = data['footer'] == null
             ? null
             : DiscordEmbedFooter.fromJson(data['footer']),
@@ -371,7 +370,7 @@ class DiscordEmbed {
         if (type != null) 'type': type,
         if (description != null) 'description': description,
         if (url != null) 'url': url,
-        if (timestamp != null) 'timestamp': timestamp.toIso8601String(),
+        if (timestamp != null) 'timestamp': timestamp!.toIso8601String(),
         if (color != null) 'color': color,
         if (footer != null) 'footer': footer,
         if (thumbnail != null) 'thumbnail': thumbnail,
@@ -385,31 +384,31 @@ class DiscordEmbed {
 
 class DiscordAttachment {
   final int id;
-  final String filename;
-  final int size;
-  final String url;
-  final String proxyUrl;
-  final int /*?*/ width;
-  final int /*?*/ height;
+  final String? filename;
+  final int? size;
+  final String? url;
+  final String? proxyUrl;
+  final int? width;
+  final int? height;
 
   DiscordAttachment({
-    @required this.id,
-    @required this.filename,
-    @required this.size,
-    @required this.url,
-    @required this.proxyUrl,
+    required this.id,
+    required this.filename,
+    required this.size,
+    required this.url,
+    required this.proxyUrl,
     this.width,
     this.height,
   });
 
   DiscordAttachment.fromJson(dynamic data)
       : id = int.parse(data['id'] as String),
-        filename = data['name'] as String,
-        size = data['size'] as int,
-        url = data['url'] as String,
-        proxyUrl = data['proxy_url'] as String,
-        width = data['width'] as int,
-        height = data['height'] as int;
+        filename = data['name'] as String?,
+        size = data['size'] as int?,
+        url = data['url'] as String?,
+        proxyUrl = data['proxy_url'] as String?,
+        width = data['width'] as int?,
+        height = data['height'] as int?;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
@@ -425,25 +424,24 @@ class DiscordAttachment {
 class DiscordMessage {
   final int id;
   final dynamic rawJson;
-  final DiscordChannel channel;
+  final DiscordChannel? channel;
   final DiscordUser user;
-  final String /*!*/ content;
+  final String content;
   final List<DiscordAttachment> attachments;
   final List<DiscordEmbed> embeds;
 
   DiscordMessage({
-    @required this.id,
-    @required this.rawJson,
-    @required this.channel,
-    @required this.user,
-    @required this.content,
-    @required this.attachments,
-    @required this.embeds,
+    required this.id,
+    required this.rawJson,
+    required this.channel,
+    required this.user,
+    required this.content,
+    required this.attachments,
+    required this.embeds,
   });
 
-  // TODO: !
-  DiscordGuild get guild => channel.guild;
-  DiscordMember get member => guild.members[user.id];
+  DiscordGuild? get guild => channel?.guild;
+  DiscordMember? get member => guild?.members[user.id];
 
-  Future<DiscordMessage> reply(String content) => channel.send(content);
+  Future<DiscordMessage> reply(String content) => channel!.send(content);
 }

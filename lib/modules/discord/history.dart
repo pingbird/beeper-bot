@@ -23,7 +23,7 @@ class DiscordHistoryModule extends Module
         'RawJson': jsonEncode(message),
         'Channel': int.parse(message['channel_id'] as String),
         'UserId': int.parse(message['author']['id'] as String),
-        'Content': message['content'] as String,
+        'Content': message['content'] as String?,
       });
     });
   }

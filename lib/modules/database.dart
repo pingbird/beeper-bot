@@ -4,28 +4,27 @@ import 'dart:convert';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper/secrets.dart';
-import 'package:meta/meta.dart';
 import 'package:postgres/postgres.dart';
 
 @Metadata(name: 'database', loadable: true)
 class DatabaseModule extends Module with StatusLoader {
-  PostgreSQLConnection con;
+  late PostgreSQLConnection con;
 
-  final String/*!*/ host;
-  final int/*!*/ port;
-  final String/*!*/ user;
-  final String/*!*/ password;
-  final String/*!*//*!*/ database;
+  final String host;
+  final int port;
+  final String user;
+  final String password;
+  final String database;
 
   DatabaseModule({
-    @required this.host,
-    @required this.port,
-    @required this.user,
-    @required this.password,
-    @required this.database,
+    required this.host,
+    required this.port,
+    required this.user,
+    required this.password,
+    required this.database,
   });
 
-  Future<T> getConf<T>(String key) async {
+  Future<T?> getConf<T>(String key) async {
     final result = await con.query(
       '''select (Value) from Config where Key = @Key''',
       substitutionValues: <String, dynamic>{
@@ -36,7 +35,7 @@ class DatabaseModule extends Module with StatusLoader {
     if (result.isEmpty) {
       return null;
     } else {
-      return jsonDecode(result.single.single as String) as T;
+      return jsonDecode(result.single.single as String) as T?;
     }
   }
 
@@ -50,7 +49,7 @@ class DatabaseModule extends Module with StatusLoader {
     );
   }
 
-  Map<String, dynamic>/*!*/ _versions;
+  late final Map<String, dynamic> _versions;
 
   Future<void> _flushVersions() => setConf('_versions', _versions);
 
@@ -88,7 +87,7 @@ class DatabaseModule extends Module with StatusLoader {
 }
 
 mixin DatabaseLoader on Module {
-  DatabaseModule database;
+  late final DatabaseModule database;
 
   @override
   Future<void> load() async {
@@ -97,7 +96,7 @@ mixin DatabaseLoader on Module {
     dbStorage = await database.getConf<dynamic>(canonicalName);
 
     final setup = dbSetup.toList();
-    final version = (database._versions[canonicalName] as int) ?? 0;
+    final version = (database._versions[canonicalName] as int?) ?? 0;
     for (var i = version; i < setup.length; i++) {
       database.log('Upgrading $canonicalName schema to version ${i + 1}');
 
@@ -116,12 +115,12 @@ mixin DatabaseLoader on Module {
     }
   }
 
-  Timer _timer;
+  Timer? _timer;
   var _repeat = false;
 
   void saveDbStorage() {
     if (_timer != null) {
-      _repeat = !_timer.isActive;
+      _repeat = !_timer!.isActive;
     } else {
       _repeat = false;
       _timer = Timer(const Duration(seconds: 1), () async {

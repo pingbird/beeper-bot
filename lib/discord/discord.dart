@@ -6,7 +6,6 @@ import 'package:beeper/discord/connection.dart';
 import 'package:beeper/discord/guild.dart';
 import 'package:beeper/discord/http.dart';
 import 'package:beeper/discord/state.dart';
-import 'package:meta/meta.dart';
 
 export 'package:beeper/discord/guild.dart';
 
@@ -29,8 +28,8 @@ abstract class Snowflake {
 
 class Discord extends DiscordState {
   Discord({
-    @required String token,
-    Uri endpoint,
+    required String token,
+    Uri? endpoint,
     String userAgent =
         'Beeper (https://github.com/PixelToast/beeper-bot, eternal beta)',
   }) : super(
@@ -44,7 +43,7 @@ class Discord extends DiscordState {
           ),
         );
 
-  DiscordUser get user => internalUser;
+  DiscordUser? get user => internalUser;
 
   Map<int, DiscordUser> get users => UnmodifiableMapView(internalUsers);
   Map<int, DiscordGuild> get guilds => UnmodifiableMapView(internalGuilds);

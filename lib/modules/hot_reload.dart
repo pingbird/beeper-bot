@@ -5,12 +5,12 @@ import 'package:hotreloader/hotreloader.dart';
 
 @Metadata(name: 'hot_reload')
 class HotReloadModule extends Module with StatusLoader {
-  HotReloader hotReloader;
+  late HotReloader hotReloader;
   @override
   Future<void> load() async {
     await super.load();
     await HotReloader.create(onAfterReload: (ctx) {
-      for (final e in ctx.events) {
+      for (final e in ctx.events!) {
         logger.log(
           'hot_reload',
           '${const {

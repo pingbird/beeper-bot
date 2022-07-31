@@ -5,7 +5,6 @@ import 'dart:math';
 
 import 'package:beeper/discord/http.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class Op {
@@ -53,7 +52,7 @@ class DiscordConnectionState {
   final bool isError;
   final bool isConnected;
   final bool isWaiting;
-  final String reason;
+  final String? reason;
 
   DiscordConnectionState._({
     this.isStarted = true,
@@ -74,7 +73,7 @@ class DiscordConnectionState {
       );
 
   factory DiscordConnectionState.error({
-    @required String reason,
+    required String reason,
   }) =>
       DiscordConnectionState._(
         isError: true,
@@ -83,7 +82,7 @@ class DiscordConnectionState {
       );
 
   factory DiscordConnectionState.waiting({
-    @required String reason,
+    required String reason,
   }) =>
       DiscordConnectionState._(
         isWaiting: true,
@@ -92,21 +91,21 @@ class DiscordConnectionState {
 }
 
 class DiscordConnection {
-  final HttpService/*!*/ http;
+  final HttpService http;
   final String _token;
 
   DiscordConnection({
-    @required String token,
-    this.http,
+    required String token,
+    required this.http,
   }) : _token = token.trim();
 
-  void Function(String name, Object data) onEvent;
+  late void Function(String? name, Object? data) onEvent;
 
-  WebSocket _socket;
-  int _heartbeatInterval;
-  Timer _heartbeatTimer;
+  late WebSocket _socket;
+  int? _heartbeatInterval;
+  Timer? _heartbeatTimer;
   var _heartbeatResponse = false;
-  int _heartbeatSequence;
+  int? _heartbeatSequence;
 
   final _stateSubject =
       BehaviorSubject.seeded(DiscordConnectionState.stopped());
@@ -124,7 +123,7 @@ class DiscordConnection {
   void _sendHeartbeat() {
     send(Op.heartbeat, _heartbeatSequence);
     _heartbeatTimer =
-        Timer(Duration(milliseconds: _heartbeatInterval), _heartbeat);
+        Timer(Duration(milliseconds: _heartbeatInterval!), _heartbeat);
   }
 
   void _heartbeat() {
@@ -141,9 +140,9 @@ class DiscordConnection {
   void _handle(dynamic message) {
     final dynamic payload = jsonDecode(message as String);
     final dynamic data = payload['d'];
-    final op = payload['op'] as int/*!*/;
-    _heartbeatSequence = payload['s'] as int ?? _heartbeatSequence;
-    final name = payload['t'] as String;
+    final op = payload['op'] as int;
+    _heartbeatSequence = payload['s'] as int? ?? _heartbeatSequence;
+    final name = payload['t'] as String?;
 
     if (op == Op.dispatch) {
       if (name == 'READY') {
@@ -153,7 +152,7 @@ class DiscordConnection {
       logger.log('discord', '< $message', level: LogLevel.verbose);
       onEvent(name, data);
     } else if (op == Op.hello) {
-      _heartbeatInterval = data['heartbeat_interval'] as int;
+      _heartbeatInterval = data['heartbeat_interval'] as int?;
       _sendHeartbeat();
       send(Op.identify, {
         'token': _token,
@@ -177,13 +176,13 @@ class DiscordConnection {
     while (true) {
       _stateSubject.add(DiscordConnectionState.started());
       retries = min(20, retries + 1);
-      int remaining;
-      int resetAfter;
+      int? remaining;
+      late int resetAfter;
       try {
         final dynamic response = await http.get('/gateway/bot');
         assert(response['shards'] == 1, 'Multiple shards not supported');
-        remaining = response['session_start_limit']['remaining'] as int/*!*/;
-        resetAfter = response['session_start_limit']['reset_after'] as int/*!*/;
+        remaining = response['session_start_limit']['remaining'] as int;
+        resetAfter = response['session_start_limit']['reset_after'] as int;
 
         logger.log('discord', 'remaining: $remaining');
         logger.log('discord', 'resetAfter: ${resetAfter / 1000}s');
@@ -201,7 +200,7 @@ class DiscordConnection {
         logger.log(
             'discord', 'closed: ${_socket.closeCode} (${_socket.closeReason})');
         var reason = 'Socket closed with code ${_socket.closeCode}';
-        if (_socket.closeReason != null && _socket.closeReason.isNotEmpty) {
+        if (_socket.closeReason != null && _socket.closeReason!.isNotEmpty) {
           reason += ' (${_socket.closeReason})';
         }
         _stateSubject.add(DiscordConnectionState.waiting(reason: reason));

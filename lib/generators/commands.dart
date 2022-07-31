@@ -14,10 +14,10 @@ class CommandsBuilder extends AggregateBuilder {
   Future<void> buildAggregate(AggregateContext context) async {
     final commandsLibrary =
         await context.findLibs('lib/modules/commands.dart').single;
-    final commandType = commandsLibrary.getType('Command').thisType;
+    final commandType = commandsLibrary.getType('Command')!.thisType;
     final modulesLibrary = await context.findLibs('lib/modules.dart').single;
-    final moduleType = modulesLibrary.getType('Module').thisType;
-    final metadataType = modulesLibrary.getType('Metadata').thisType;
+    final moduleType = modulesLibrary.getType('Module')!.thisType;
+    final metadataType = modulesLibrary.getType('Metadata')!.thisType;
 
     final imports = <LibraryElement, Set<String>>{};
     final out = StringBuffer();
@@ -41,22 +41,22 @@ class CommandsBuilder extends AggregateBuilder {
           if (commandInfo == null) continue;
           imports.putIfAbsent(library, () => {}).add(cls.name);
 
-          final commandName = commandInfo.getField('name').isNull
+          final commandName = commandInfo.getField('name')!.isNull
               ? method.name
-              : commandInfo.getField('name').toStringValue();
+              : commandInfo.getField('name')!.toStringValue();
 
-          final commandAliases = commandInfo.getField('alias').isNull
+          final Set<String?> commandAliases = commandInfo.getField('alias')!.isNull
               ? <String>{}
               : commandInfo
-                  .getField('alias')
-                  .toSetValue()
-                  .map((s) => s.toStringValue() /*!*/)
+                  .getField('alias')!
+                  .toSetValue()!
+                  .map((s) => s.toStringValue()!)
                   .toSet();
 
           commandAliases.add(commandName);
 
           entries.add('CommandEntry('
-              '{${commandAliases.map((s) => '\'${escape(s)}\'').join(', ')}},'
+              '{${commandAliases.map((s) => '\'${escape(s!)}\'').join(', ')}},'
               'm.${method.name}'
               ')');
         }

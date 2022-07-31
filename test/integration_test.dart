@@ -44,7 +44,7 @@ void main() {
 
     await bot.start();
 
-    final discord = bot.scope.get<DiscordModule>().discord;
+    final discord = bot.scope.get<DiscordModule>()!.discord;
 
     await discord.connectionStates.where((event) => event.isConnected).first;
 

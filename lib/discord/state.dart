@@ -4,7 +4,6 @@ import 'package:beeper/discord/connection.dart';
 import 'package:beeper/discord/discord.dart';
 import 'package:beeper/discord/http.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
 extension DiscordStateInternal on DiscordState {
@@ -16,13 +15,13 @@ extension DiscordStateInternal on DiscordState {
       _updateChannelEntity(data);
   DiscordMember updateMemberEntity(
     dynamic data, {
-    @required DiscordGuild guild,
-    DiscordUser user,
+    required DiscordGuild guild,
+    DiscordUser? user,
   }) =>
       _updateMemberEntity(data, guild: guild, user: user);
   DiscordMessage wrapMessage(dynamic data) => _wrapMessage(data);
 
-  DiscordUser get internalUser => _userSubject.value;
+  DiscordUser? get internalUser => _userSubject.value;
 
   Map<int, DiscordUser> get internalUsers => _users;
   Map<int, DiscordGuild> get internalGuilds => _guilds;
@@ -42,18 +41,18 @@ abstract class DiscordState {
   Stream<DiscordMessage> get onMessageCreate => _onMessageCreate.stream;
   final _onMessageCreate = StreamController<DiscordMessage>.broadcast();
 
-  Stream<Map<String, dynamic>/*!*/> get onRawMessageCreate =>
-      _onRawMessageCreate.stream;
-  final _onRawMessageCreate =
-      StreamController<Map<String, dynamic>/*!*/>.broadcast();
+  Stream<Map<String, dynamic>> get onRawMessageCreate =>
+      _onRawMessageCreate.stream as Stream<Map<String, dynamic>>;
+  final StreamController<Map<String, dynamic>?> _onRawMessageCreate =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   DiscordState({
-    @required DiscordConnection connection,
+    required DiscordConnection connection,
   }) : _connection = connection {
-    _connection.onEvent = _onEvent;
+    _connection.onEvent = _onEvent as void Function(String?, Object?);
   }
 
-  void _onEvent(String/*!*/ name, dynamic data) {
+  void _onEvent(String name, dynamic data) {
     switch (name) {
       case 'READY':
         _userSubject.add(_updateUserEntity(data['user']));
@@ -78,10 +77,10 @@ abstract class DiscordState {
         // TODO(ping): _updateMessageEntity
         break;
       case 'MESSAGE_CREATE':
-        _onRawMessageCreate.add(data as Map<String, dynamic>);
+        _onRawMessageCreate.add(data as Map<String, dynamic>?);
 
         // Ignore webhook messages (for now)
-        if (data['webhook_id'] != null || data['type'] != 0) {
+        if (data!['webhook_id'] != null || data['type'] != 0) {
           break;
         }
 
@@ -96,7 +95,7 @@ abstract class DiscordState {
   ValueStream<DiscordConnectionState> get connectionStates =>
       _connection.states;
 
-  final _userSubject = BehaviorSubject<DiscordUser/*?*/>();
+  final _userSubject = BehaviorSubject<DiscordUser?>();
 
   final _users = <int, DiscordUser>{};
   final _guilds = <int, DiscordGuild>{};
@@ -137,7 +136,7 @@ abstract class DiscordState {
 
   DiscordChannel _updateChannelEntity(dynamic data) {
     final id = int.parse(data['id'] as String);
-    DiscordGuild guild;
+    DiscordGuild? guild;
     if (data['guild_id'] != null) {
       guild = _guilds[int.parse(data['guild_id'] as String)];
       if (guild == null) {
@@ -163,11 +162,11 @@ abstract class DiscordState {
 
   DiscordMember _updateMemberEntity(
     dynamic data, {
-    @required DiscordGuild guild,
-    DiscordUser user,
+    required DiscordGuild guild,
+    DiscordUser? user,
   }) {
     user ??= _updateUserEntity(data['user']);
-    final member = _members[guild.id].putIfAbsent(
+    final member = _members[guild.id]!.putIfAbsent(
       user.id,
       () => DiscordMember(
         guild: guild,

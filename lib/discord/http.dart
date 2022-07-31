@@ -4,15 +4,14 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
-import 'package:meta/meta.dart';
 
 class DiscordHttpError {
-  final http.BaseRequest/*!*/ request;
-  final http.BaseResponse/*!*/ response;
+  final http.BaseRequest request;
+  final http.BaseResponse response;
 
   DiscordHttpError({
-    final this.request,
-    final this.response,
+    required final this.request,
+    required final this.response,
   });
 
   @override
@@ -26,15 +25,15 @@ class HttpService {
   final client = http.Client();
 
   final Uri endpoint;
-  final String/*!*/ authorization;
-  final String/*!*/ userAgent;
+  final String authorization;
+  final String userAgent;
 
   final buckets = <String, HttpBucket>{};
 
   HttpService({
-    @required this.endpoint,
-    this.authorization,
-    this.userAgent,
+    required this.endpoint,
+    required this.authorization,
+    required this.userAgent,
   });
 
   Future<http.StreamedResponse> sendRaw(http.BaseRequest request) async {
@@ -52,20 +51,20 @@ class HttpService {
 
       final time = DateTime.now();
 
-      int remaining;
+      int? remaining;
       if (response.headers.containsKey('x-ratelimit-remaining')) {
-        remaining = int.parse(response.headers['x-ratelimit-remaining']);
+        remaining = int.parse(response.headers['x-ratelimit-remaining']!);
       }
 
-      DateTime resetAt;
+      DateTime? resetAt;
       if (response.headers.containsKey('x-ratelimit-reset-after')) {
-        final dt = double.parse(response.headers['x-ratelimit-reset-after']);
+        final dt = double.parse(response.headers['x-ratelimit-reset-after']!);
         resetAt = time.add(
           Duration(milliseconds: (dt * 1000).round()),
         );
       }
 
-      bucket.queueReset(
+      bucket!.queueReset(
         remaining: remaining,
         resetAt: resetAt,
       );
@@ -77,7 +76,7 @@ class HttpService {
   Future<dynamic> send(
     String method,
     String path, {
-    Map<String, dynamic> queryParameters,
+    Map<String, dynamic>? queryParameters,
     dynamic body,
   }) async {
     final request = http.Request(
@@ -108,12 +107,12 @@ class HttpService {
     return jsonDecode(await response.stream.bytesToString());
   }
 
-  Future<dynamic> get(String path, {Map<String, dynamic> queryParameters}) =>
+  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) =>
       send('GET', path, queryParameters: queryParameters);
 
   Future<dynamic> post(
     String path, {
-    Map<String, dynamic> queryParameters,
+    Map<String, dynamic>? queryParameters,
     dynamic body,
   }) =>
       send('POST', path, queryParameters: queryParameters, body: body);
@@ -125,7 +124,7 @@ class HttpBucket {
   int active = 0;
   int get available => remaining - active;
   DateTime resetAt = DateTime.fromMicrosecondsSinceEpoch(0);
-  Timer reset;
+  Timer? reset;
 
   Future<T> wrap<T>(Future<T> Function() fn) async {
     final nextReset = resetAt;
@@ -140,7 +139,7 @@ class HttpBucket {
     try {
       return fn();
     } finally {
-      if (nextReset != null && !resetAt.isAfter(nextReset)) {
+      if (!resetAt.isAfter(nextReset)) {
         // Don't take away from remaining if the reset elapsed
         remaining--;
       }
@@ -156,11 +155,11 @@ class HttpBucket {
   }
 
   void queueReset({
-    @required int remaining,
-    @required DateTime resetAt,
+    required int? remaining,
+    required DateTime? resetAt,
   }) {
-    remaining ??= this.remaining ?? 10;
-    resetAt ??= this.resetAt ?? DateTime.now().add(const Duration(seconds: 1));
+    remaining ??= this.remaining;
+    resetAt ??= this.resetAt;
 
     if (!resetAt.isAfter(this.resetAt)) {
       this.remaining = min(this.remaining, remaining);

@@ -8,19 +8,18 @@ import 'package:beeper/modules.dart';
 import 'package:beeper/modules/disposer.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 import 'package:pedantic/pedantic.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_proxy/shelf_proxy.dart';
 
-DateTime startTime;
+DateTime? startTime;
 
 class AdminClient {
   WebSocket socket;
 
   AdminClient({
-    @required this.socket,
+    required this.socket,
   });
 
   void send(dynamic data) {
@@ -36,10 +35,10 @@ class AdminModule extends Module with StatusLoader, Disposer {
   final int webdevPort;
 
   AdminModule({
-    @required String uri,
-    bool development,
-    int adminPort,
-    int webdevPort,
+    required String uri,
+    bool? development,
+    int? adminPort,
+    int? webdevPort,
   })  : uri = Uri.parse(uri),
         development = development ?? false,
         adminPort = adminPort ?? 4050,
@@ -48,12 +47,12 @@ class AdminModule extends Module with StatusLoader, Disposer {
   static const maxLogHistory = 4096;
   final logHistory = Queue<LogEvent>();
 
-  HttpServer server;
+  late HttpServer server;
 
-  Process webdevProcess;
+  Process? webdevProcess;
 
   Future<void> _handleError(HttpRequest request,
-      [int code = 500, String text]) async {
+      [int code = 500, String? text]) async {
     final res = request.response;
     res.headers.contentType = ContentType.html;
     res.statusCode = code;
@@ -85,7 +84,7 @@ class AdminModule extends Module with StatusLoader, Disposer {
           't': 'status',
           'd': {
             'version': bot.version,
-            'started': startTime.millisecondsSinceEpoch,
+            'started': startTime!.millisecondsSinceEpoch,
             'statuses': statuses,
             'logs': logHistory.toList(),
           },
@@ -126,7 +125,7 @@ class AdminModule extends Module with StatusLoader, Disposer {
 
       const LineSplitter()
           .bind(
-        utf8.decoder.bind(webdevProcess.stdout),
+        utf8.decoder.bind(webdevProcess!.stdout),
       )
           .listen((event) {
         if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
@@ -136,13 +135,13 @@ class AdminModule extends Module with StatusLoader, Disposer {
 
       const LineSplitter()
           .bind(
-        utf8.decoder.bind(webdevProcess.stderr),
+        utf8.decoder.bind(webdevProcess!.stderr),
       )
           .listen((event) {
         log(event, level: LogLevel.warning);
       });
 
-      webdevProcess.exitCode.then((exitCode) {
+      webdevProcess!.exitCode.then((exitCode) {
         log('webdev exited with status code $exitCode',
             level: LogLevel.warning);
       });

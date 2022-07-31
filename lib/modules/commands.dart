@@ -7,10 +7,9 @@ import 'package:beeper/modules/discord.dart';
 import 'package:beeper/modules/disposer.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 
 class Command {
-  final String name;
+  final String? name;
   final Set<String> alias;
 
   const Command({
@@ -53,7 +52,7 @@ class CommandArgs {
       }
     }
 
-    String read([int n = 1]) {
+    String? read([int n = 1]) {
       if (i + n >= text.length) {
         return null;
       } else {
@@ -63,7 +62,7 @@ class CommandArgs {
       }
     }
 
-    String readPattern(RegExp pattern) {
+    String? readPattern(RegExp pattern) {
       final match = pattern.matchAsPrefix(text, i);
       if (match == null) {
         return null;
@@ -87,7 +86,7 @@ class CommandArgs {
       readPattern(_spacePattern);
     }
 
-    int readEscapedChar() {
+    int? readEscapedChar() {
       const escapeChars = {
         'a': '\x07',
         'b': '\b',
@@ -103,7 +102,7 @@ class CommandArgs {
 
       final firstChar = peek();
       if (escapeChars.containsKey(firstChar)) {
-        return escapeChars[firstChar].codeUnitAt(0);
+        return escapeChars[firstChar]!.codeUnitAt(0);
       }
 
       final match = readPattern(_intPattern);
@@ -112,7 +111,7 @@ class CommandArgs {
       }
 
       final prefix = match.substring(0, 1);
-      int result;
+      int? result;
       if (prefix == 'x') {
         result = int.tryParse(match.substring(1), radix: 16);
       } else if (prefix == 'b') {
@@ -130,7 +129,7 @@ class CommandArgs {
       return result;
     }
 
-    String readStringLiteral() {
+    String? readStringLiteral() {
       if (!check('"')) return null;
 
       var out = '';
@@ -141,7 +140,7 @@ class CommandArgs {
               'Parse error: \'"\' expected before end of input');
         }
         if (c == '\\') {
-          out += String.fromCharCode(readEscapedChar());
+          out += String.fromCharCode(readEscapedChar()!);
         } else {
           out += c;
         }
@@ -150,7 +149,7 @@ class CommandArgs {
       return out;
     }
 
-    String readValue() {
+    String? readValue() {
       final str = readStringLiteral();
       if (str != null) {
         return str;
@@ -197,9 +196,9 @@ class CommandInvocation implements StreamSink<String>, StringSink {
   final CommandsModule module;
 
   CommandInvocation({
-    @required this.args,
-    @required this.entry,
-    @required this.module,
+    required this.args,
+    required this.entry,
+    required this.module,
   }) {
     _controller.done.then((void value) => close());
   }
@@ -216,7 +215,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
   }
 
   @override
-  void write(Object obj) {
+  void write(Object? obj) {
     result += '$obj';
   }
 
@@ -231,7 +230,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
   }
 
   @override
-  void writeln([Object obj = '']) {
+  void writeln([Object? obj = '']) {
     result += '$obj\n';
   }
 
@@ -241,7 +240,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
   }
 
   @override
-  void addError(Object error, [StackTrace stackTrace]) {
+  void addError(Object error, [StackTrace? stackTrace]) {
     _controller.addError(error, stackTrace);
   }
 
@@ -269,7 +268,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
 
     _closed.complete();
 
-    return Future.wait<void>([
+    await Future.wait<void>([
       for (final subscription in _subscriptions) subscription.cancel(),
       _controller.close(),
     ]);
@@ -304,17 +303,17 @@ class CommandsModule extends Module
     }
   }
 
-  CommandInvocation createInvocation(String line) {
+  CommandInvocation? createInvocation(String line) {
     final commandMatch = _commandPattern.matchAsPrefix(line);
     if (commandMatch == null) {
       return null;
     }
-    final entry = activeCommands[commandMatch.group(1)];
+    final entry = activeCommands[commandMatch.group(1)!];
     if (entry == null) {
       return null;
     }
     return CommandInvocation(
-      args: CommandArgs(commandMatch.group(2)),
+      args: CommandArgs(commandMatch.group(2)!),
       entry: entry,
       module: this,
     );
@@ -329,7 +328,7 @@ class CommandsModule extends Module
 
       final prefixes = [
         '~',
-        discord.user.mentionPattern,
+        discord.user!.mentionPattern,
       ];
 
       for (final prefix in prefixes) {
@@ -357,15 +356,14 @@ class CommandsModule extends Module
 }
 
 mixin CommandsLoader on Module {
-  CommandsModule commands;
-
-  List<CommandEntry> _entries;
+  late final CommandsModule commands;
+  late final List<CommandEntry> _entries;
 
   @override
   Future<void> load() async {
     await super.load();
     commands = await scope.require();
-    _entries = commandLoaders[runtimeType](this);
+    _entries = commandLoaders[runtimeType]!(this);
     _entries.forEach(commands.addEntry);
   }
 

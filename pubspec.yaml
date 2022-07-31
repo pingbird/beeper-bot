@@ -4,7 +4,7 @@ publish_to: none
 version: 0.0.1
 
 environment:
-  sdk: '>=2.10.0 <3.0.0'
+  sdk: '>=2.17.5 <3.0.0'
 
 dependencies:
   async: ^2.4.2
@@ -21,7 +21,6 @@ dependencies:
   stack_trace: ^1.9.6
   strings: ^0.2.2
   tuple: ^2.0.0
-  websocket: ^0.0.5
   yaml: ^3.1.0
 
 dev_dependencies:

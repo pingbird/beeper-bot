@@ -2,15 +2,14 @@ import 'dart:async';
 
 import 'package:beeper/modules.dart';
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
 
 class StatusUpdateEvent {
   final Module module;
   final dynamic data;
 
   StatusUpdateEvent({
-    @required this.module,
-    @required this.data,
+    required this.module,
+    required this.data,
   });
 }
 
@@ -26,8 +25,8 @@ class StatusModule extends Module {
 }
 
 mixin StatusLoader on Module {
-  StatusModule statusModule;
-  Object /*?*/ _status;
+  late final StatusModule statusModule;
+  Object? _status;
   bool _loaded = false;
 
   dynamic get status => _status;

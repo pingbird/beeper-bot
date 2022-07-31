@@ -3,7 +3,7 @@ import 'package:beeper/modules/commands.dart';
 
 @Metadata(name: 'ping')
 class PingModule extends Module with CommandsLoader {
-  final String response;
+  final String? response;
 
   PingModule({this.response});
 

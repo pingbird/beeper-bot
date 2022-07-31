@@ -15,9 +15,9 @@ Map<Type, Metadata> get moduleMetadata => {
           lazyLoad: true,
           factory: (dynamic data) => AdminModule(
               uri: data['uri'] as String,
-              development: data['development'] as bool,
-              adminPort: data['adminPort'] as int,
-              webdevPort: data['webdevPort'] as int)),
+              development: data['development'] as bool?,
+              adminPort: data['adminPort'] as int?,
+              webdevPort: data['webdevPort'] as int?)),
       CommandsModule: Metadata(
           name: 'commands',
           lazyLoad: true,
@@ -40,7 +40,7 @@ Map<Type, Metadata> get moduleMetadata => {
           lazyLoad: true,
           factory: (dynamic data) => DiscordModule(
               token: data['token'] as String,
-              endpoint: data['endpoint'] as String)),
+              endpoint: data['endpoint'] as String?)),
       HotReloadModule: Metadata(
           name: 'hot_reload',
           lazyLoad: true,
@@ -49,6 +49,6 @@ Map<Type, Metadata> get moduleMetadata => {
           name: 'ping',
           lazyLoad: true,
           factory: (dynamic data) =>
-              PingModule(response: data['response'] as String)),
+              PingModule(response: data['response'] as String?)),
       StatusModule: Metadata(name: 'status', lazyLoad: false, factory: null),
     };

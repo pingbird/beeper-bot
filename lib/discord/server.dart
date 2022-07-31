@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:beeper/discord/connection.dart';
 import 'package:beeper/discord/discord.dart';
-import 'package:meta/meta.dart';
 
 class DiscordServerRequest {
   final DiscordServer server;
@@ -13,25 +12,25 @@ class DiscordServerRequest {
   final Map<String, String> args;
 
   DiscordServerRequest({
-    @required this.server,
-    @required this.httpRequest,
-    @required this.path,
-    @required this.args,
+    required this.server,
+    required this.httpRequest,
+    required this.path,
+    required this.args,
   });
 
-  String string(String key) {
+  String? string(String key) {
     return args[key];
   }
 
   int integer(String key) {
-    return int.parse(args[key]);
+    return int.parse(args[key]!);
   }
 
-  static DiscordServerRequest fromPath({
-    @required String pattern,
-    @required DiscordServer server,
-    @required HttpRequest httpRequest,
-    @required List<String> path,
+  static DiscordServerRequest? fromPath({
+    required String pattern,
+    required DiscordServer server,
+    required HttpRequest httpRequest,
+    required List<String> path,
   }) {
     final segments = pattern.split('/');
     final args = <String, String>{};
@@ -97,17 +96,17 @@ class DiscordServer {
   final String validAuthorization;
 
   DiscordServer({
-    @required this.uri,
-    @required this.validAuthorization,
+    required this.uri,
+    required this.validAuthorization,
   });
 
-  HttpServer httpServer;
+  late HttpServer httpServer;
 
   final clients = <WebSocket>{};
 
   void acceptClient(WebSocket socket) async {
     var seq = 0;
-    void send(int op, [dynamic data, String name]) {
+    void send(int op, [dynamic data, String? name]) {
       final str = jsonEncode(<String, dynamic>{
         'op': op,
         if (data != null) 'd': data,
@@ -129,7 +128,7 @@ class DiscordServer {
       final dynamic data = jsonDecode(message as String);
       print('Server received $message');
 
-      final op = data['op'] as int;
+      final op = data['op'] as int?;
 
       if (op == Op.heartbeat) {
         send(Op.heartbeatAck);
@@ -152,7 +151,7 @@ class DiscordServer {
     clients.remove(socket);
   }
 
-  static bool isValidUserAgent(String name) {
+  static bool isValidUserAgent(String? name) {
     if (name == null) {
       return false;
     }
@@ -190,7 +189,7 @@ class DiscordServer {
     throw DiscordServerHttpError(404, 'Not Found');
   }
 
-  List<String> resolvePath(List<String> path) {
+  List<String>? resolvePath(List<String> path) {
     if (uri.pathSegments.length > path.length) {
       return null;
     }
@@ -216,7 +215,7 @@ class DiscordServer {
           request.requestedUri.pathSegments.where((e) => e != '').toList());
       if (path != null) {
         try {
-          final Object /*?*/ result = await _handle(request, path);
+          final Object? result = await _handle(request, path);
           if (result == _upgraded) {
             return;
           } else if (result != null) {
