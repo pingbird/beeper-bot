@@ -69,12 +69,10 @@ final matchers = <String, Future<dynamic> Function(DiscordServerRequest)>{
         'reset_after': 86400000,
         'max_concurrency': 1,
       },
-      'url': '${
-        r.server.uri.replace(
-          scheme: 'ws',
-          path: 'gateway/ws',
-        )
-      }',
+      'url': '${r.server.uri.replace(
+        scheme: 'ws',
+        path: 'gateway/ws',
+      )}',
     };
   },
   'gateway/ws': (r) async {
@@ -119,6 +117,7 @@ class DiscordServer {
       print('Server sent $str');
       socket.add(str);
     }
+
     clients.add(socket);
     print('Accepted client $socket');
 
@@ -135,15 +134,19 @@ class DiscordServer {
       if (op == Op.heartbeat) {
         send(Op.heartbeatAck);
       } else if (op == Op.identify) {
-        send(Op.dispatch, <String, dynamic>{
-          'user': {
-            'id': '${Snowflake.random()}',
-            'username': 'test_bot',
-            'discriminator': '1234',
-            'bot': true,
+        send(
+          Op.dispatch,
+          <String, dynamic>{
+            'user': {
+              'id': '${Snowflake.random()}',
+              'username': 'test_bot',
+              'discriminator': '1234',
+              'bot': true,
+            },
+            'guilds': <dynamic>[],
           },
-          'guilds': <dynamic>[],
-        }, 'READY');
+          'READY',
+        );
       }
     }
     clients.remove(socket);
@@ -209,7 +212,8 @@ class DiscordServer {
     httpServer = await HttpServer.bind(uri.host, uri.port);
     httpServer.forEach((request) async {
       final res = request.response;
-      final path = resolvePath(request.requestedUri.pathSegments.where((e) => e != '').toList());
+      final path = resolvePath(
+          request.requestedUri.pathSegments.where((e) => e != '').toList());
       if (path != null) {
         try {
           final dynamic result = await _handle(request, path);

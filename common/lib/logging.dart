@@ -60,11 +60,12 @@ class Logger {
   }
 
   T wrap<T>(T Function() fn) => runZonedGuarded(
-    fn, (e, bt) {
-      log('exception', '$e\n$bt', level: LogLevel.error);
-    },
-    zoneValues: {
-      _loggerKey: this,
-    },
-  );
+        fn,
+        (e, bt) {
+          log('exception', '$e\n$bt', level: LogLevel.error);
+        },
+        zoneValues: {
+          _loggerKey: this,
+        },
+      );
 }

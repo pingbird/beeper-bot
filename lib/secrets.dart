@@ -18,9 +18,13 @@ BlockCipher _initializeCipher(bool encrypt, Uint8List header, String password) {
   final keyBytes = derivator.process(passwordBytes);
 
   final cipher = PaddedBlockCipher('AES/CBC/PKCS7')
-    ..init(encrypt, PaddedBlockCipherParameters(
-      ParametersWithIV(KeyParameter(keyBytes), ivView), null
-    ));
+    ..init(
+      encrypt,
+      PaddedBlockCipherParameters(
+        ParametersWithIV(KeyParameter(keyBytes), ivView),
+        null,
+      ),
+    );
 
   return cipher;
 }

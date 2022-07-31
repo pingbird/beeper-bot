@@ -11,22 +11,23 @@ dependencies:
   beeper_common:
     path: common
   clock: ^1.0.1
-  http: ^0.12.2
+  http: ^0.13.4
+  lints: ^2.0.0
   path: ^1.7.0
-  pointycastle: ^2.0.0
+  pointycastle: ^3.6.1
   postgres: ^2.2.0
-  rxdart: ^0.26.0
+  rxdart: ^0.27.5
   shelf_proxy: any
   stack_trace: ^1.9.6
-  strings: ^0.1.2
-  tuple: ^1.0.3
+  strings: ^0.2.2
+  tuple: ^2.0.0
+  websocket: ^0.0.5
   yaml: ^3.1.0
 
 dev_dependencies:
-  build_runner: ^1.10.3
-  dart_style: ^1.3.8
+  build_runner: ^2.2.0
+  dart_style: ^2.2.3
   fake_async: ^1.1.0
-  hotreloader: ^2.0.2
-  pedantic: ^1.9.0
-  source_gen: ^0.9.7
+  hotreloader: ^3.0.5
+  source_gen: ^1.2.2
   test: ^1.14.4

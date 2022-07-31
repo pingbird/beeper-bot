@@ -3,17 +3,16 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:beeper_common/logging.dart';
-import 'package:beeper/modules/status.dart';
-import 'package:shelf_proxy/shelf_proxy.dart';
-import 'package:shelf/shelf_io.dart';
-import 'package:meta/meta.dart';
-import 'package:path/path.dart' as path;
-import 'package:pedantic/pedantic.dart';
-
 import 'package:beeper/beeper.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/disposer.dart';
+import 'package:beeper/modules/status.dart';
+import 'package:beeper_common/logging.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' as path;
+import 'package:pedantic/pedantic.dart';
+import 'package:shelf/shelf_io.dart';
+import 'package:shelf_proxy/shelf_proxy.dart';
 
 DateTime startTime;
 
@@ -41,11 +40,10 @@ class AdminModule extends Module with StatusLoader, Disposer {
     bool development,
     int adminPort,
     int webdevPort,
-  }) :
-    uri = Uri.parse(uri),
-    development = development ?? false,
-    adminPort = adminPort ?? 4050,
-    webdevPort = webdevPort ?? 4051;
+  })  : uri = Uri.parse(uri),
+        development = development ?? false,
+        adminPort = adminPort ?? 4050,
+        webdevPort = webdevPort ?? 4051;
 
   static const maxLogHistory = 4096;
   final logHistory = Queue<LogEvent>();
@@ -54,7 +52,8 @@ class AdminModule extends Module with StatusLoader, Disposer {
 
   Process webdevProcess;
 
-  Future<void> _handleError(HttpRequest request, [int code = 500, String text]) async {
+  Future<void> _handleError(HttpRequest request,
+      [int code = 500, String text]) async {
     final res = request.response;
     res.headers.contentType = ContentType.html;
     res.statusCode = code;
@@ -97,7 +96,7 @@ class AdminModule extends Module with StatusLoader, Disposer {
           final dynamic data = jsonDecode(message as String);
           print(data);
         }
-      } catch(e, bt) {
+      } catch (e, bt) {
         // TODO(ping): Logging framework
         Zone.current.errorCallback(e, bt);
       } finally {
@@ -125,22 +124,27 @@ class AdminModule extends Module with StatusLoader, Disposer {
         workingDirectory: path.join(Directory.current.path, 'admin'),
       );
 
-      const LineSplitter().bind(
+      const LineSplitter()
+          .bind(
         utf8.decoder.bind(webdevProcess.stdout),
-      ).listen((event) {
+      )
+          .listen((event) {
         if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
           log(event.codeUnits.toString());
         }
       });
 
-      const LineSplitter().bind(
+      const LineSplitter()
+          .bind(
         utf8.decoder.bind(webdevProcess.stderr),
-      ).listen((event) {
+      )
+          .listen((event) {
         log(event, level: LogLevel.warning);
       });
 
       webdevProcess.exitCode.then((exitCode) {
-        log('webdev exited with status code $exitCode', level: LogLevel.warning);
+        log('webdev exited with status code $exitCode',
+            level: LogLevel.warning);
       });
     }
 
@@ -149,7 +153,8 @@ class AdminModule extends Module with StatusLoader, Disposer {
         if (client.uri.path == '/ws') {
           await _handleWebsocket(client);
         } else if (development) {
-          await handleRequest(client, proxyHandler('http://localhost:$webdevPort'));
+          await handleRequest(
+              client, proxyHandler('http://localhost:$webdevPort'));
         }
       } catch (e, bt) {
         await _handleError(client, 500, '$e\n$bt');

@@ -3,12 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:beeper/discord/http.dart';
 import 'package:beeper_common/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:rxdart/subjects.dart' show BehaviorSubject;
-
-import 'package:beeper/discord/http.dart';
 
 abstract class Op {
   Op._();
@@ -66,29 +64,31 @@ class DiscordConnectionState {
   });
 
   factory DiscordConnectionState.stopped() => DiscordConnectionState._(
-    isStarted: false,
-  );
+        isStarted: false,
+      );
 
   factory DiscordConnectionState.started() => DiscordConnectionState._();
 
   factory DiscordConnectionState.connected() => DiscordConnectionState._(
-    isConnected: true,
-  );
+        isConnected: true,
+      );
 
   factory DiscordConnectionState.error({
     @required String reason,
-  }) => DiscordConnectionState._(
-    isError: true,
-    isWaiting: true,
-    reason: reason,
-  );
+  }) =>
+      DiscordConnectionState._(
+        isError: true,
+        isWaiting: true,
+        reason: reason,
+      );
 
   factory DiscordConnectionState.waiting({
     @required String reason,
-  }) => DiscordConnectionState._(
-    isWaiting: true,
-    reason: reason,
-  );
+  }) =>
+      DiscordConnectionState._(
+        isWaiting: true,
+        reason: reason,
+      );
 }
 
 class DiscordConnection {
@@ -108,7 +108,8 @@ class DiscordConnection {
   var _heartbeatResponse = false;
   int _heartbeatSequence;
 
-  final _stateSubject = BehaviorSubject.seeded(DiscordConnectionState.stopped());
+  final _stateSubject =
+      BehaviorSubject.seeded(DiscordConnectionState.stopped());
   DiscordConnectionState get state => _stateSubject.value;
   ValueStream<DiscordConnectionState> get states => _stateSubject.stream;
 
@@ -122,7 +123,8 @@ class DiscordConnection {
 
   void _sendHeartbeat() {
     send(Op.heartbeat, _heartbeatSequence);
-    _heartbeatTimer = Timer(Duration(milliseconds: _heartbeatInterval), _heartbeat);
+    _heartbeatTimer =
+        Timer(Duration(milliseconds: _heartbeatInterval), _heartbeat);
   }
 
   void _heartbeat() {
@@ -155,7 +157,8 @@ class DiscordConnection {
       _sendHeartbeat();
       send(Op.identify, {
         'token': _token,
-        'intents': Intents.guilds | Intents.directMessages | Intents.guildMessages,
+        'intents':
+            Intents.guilds | Intents.directMessages | Intents.guildMessages,
         'properties': {
           '\$os': Platform.operatingSystem,
           '\$browser': 'beep',
@@ -195,14 +198,16 @@ class DiscordConnection {
         final url = response['url'] as String;
         _socket = await WebSocket.connect(url + '?v=6&encoding=json');
         await _socket.forEach(_handle);
-        logger.log('discord', 'closed: ${_socket.closeCode} (${_socket.closeReason})');
+        logger.log(
+            'discord', 'closed: ${_socket.closeCode} (${_socket.closeReason})');
         var reason = 'Socket closed with code ${_socket.closeCode}';
         if (_socket.closeReason != null && _socket.closeReason.isNotEmpty) {
           reason += ' (${_socket.closeReason})';
         }
         _stateSubject.add(DiscordConnectionState.waiting(reason: reason));
       } catch (e, bt) {
-        logger.log('discord', 'Failed to connect to gateway: $e\n$bt', level: LogLevel.error);
+        logger.log('discord', 'Failed to connect to gateway: $e\n$bt',
+            level: LogLevel.error);
         _stateSubject.add(DiscordConnectionState.error(reason: '$e\n$bt'));
       }
       _heartbeatTimer?.cancel();

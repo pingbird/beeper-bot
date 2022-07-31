@@ -3,8 +3,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
+import 'package:meta/meta.dart';
 
 class DiscordHttpError {
   final http.BaseRequest request;
@@ -17,9 +17,8 @@ class DiscordHttpError {
 
   @override
   String toString() {
-    return
-      'Discord HTTP request failed: ${request.method} ${request.url} '
-      'returned ${response.statusCode}';
+    return 'Discord HTTP request failed: ${request.method} ${request.url} '
+        'returned ${response.statusCode}';
   }
 }
 
@@ -75,20 +74,27 @@ class HttpService {
     });
   }
 
-  Future<dynamic> send(String method, String path, {
+  Future<dynamic> send(
+    String method,
+    String path, {
     Map<String, dynamic> queryParameters,
     dynamic body,
   }) async {
-    final request = http.Request(method, endpoint.replace(
-      path: endpoint.path + '/' + path,
-      queryParameters: queryParameters == null ? null : <String, dynamic>{
-        for (var e in queryParameters.entries)
-          if (e.value is Iterable)
-            e.key: e.value.map((Object v) => '$v')
-          else
-            e.key: '${e.value}',
-      },
-    ));
+    final request = http.Request(
+      method,
+      endpoint.replace(
+        path: endpoint.path + '/' + path,
+        queryParameters: queryParameters == null
+            ? null
+            : <String, dynamic>{
+                for (var e in queryParameters.entries)
+                  if (e.value is Iterable)
+                    e.key: e.value.map((Object v) => '$v')
+                  else
+                    e.key: '${e.value}',
+              },
+      ),
+    );
 
     if (body != null) {
       request.body = jsonEncode(body);
@@ -103,13 +109,14 @@ class HttpService {
   }
 
   Future<dynamic> get(String path, {Map<String, dynamic> queryParameters}) =>
-    send('GET', path, queryParameters: queryParameters);
+      send('GET', path, queryParameters: queryParameters);
 
-  Future<dynamic> post(String path, {
+  Future<dynamic> post(
+    String path, {
     Map<String, dynamic> queryParameters,
     dynamic body,
   }) =>
-    send('POST', path, queryParameters: queryParameters, body: body);
+      send('POST', path, queryParameters: queryParameters, body: body);
 }
 
 class HttpBucket {
@@ -159,7 +166,6 @@ class HttpBucket {
       this.remaining = min(this.remaining, remaining);
     } else {
       this.remaining = remaining;
-
     }
     this.resetAt = resetAt;
     reset?.cancel();

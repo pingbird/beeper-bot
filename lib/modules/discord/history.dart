@@ -1,13 +1,13 @@
 import 'dart:convert';
 
+import 'package:beeper/modules.dart';
 import 'package:beeper/modules/database.dart';
 import 'package:beeper/modules/discord.dart';
-
-import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
 
 @Metadata(name: 'discord_history')
-class DiscordHistoryModule extends Module with StatusLoader, DiscordLoader, DatabaseLoader {
+class DiscordHistoryModule extends Module
+    with StatusLoader, DiscordLoader, DatabaseLoader {
   @override
   Future<void> load() async {
     await super.load();
@@ -30,7 +30,7 @@ class DiscordHistoryModule extends Module with StatusLoader, DiscordLoader, Data
 
   @override
   Iterable<dynamic> get dbSetup => const <String>[
-    '''
+        '''
       create table DiscordMessages (
         Id bigint primary key,
         RawJson text,
@@ -50,5 +50,5 @@ class DiscordHistoryModule extends Module with StatusLoader, DiscordLoader, Data
         unique(MessageId, EditNumber)
       );
     '''
-  ];
+      ];
 }

@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper/secrets.dart';
-import 'package:postgres/postgres.dart';
 import 'package:meta/meta.dart';
-
-import 'package:beeper/modules.dart';
+import 'package:postgres/postgres.dart';
 
 @Metadata(name: 'database', loadable: true)
 class DatabaseModule extends Module with StatusLoader {
@@ -75,7 +74,8 @@ class DatabaseModule extends Module with StatusLoader {
       );
     ''');
 
-    _versions = await getConf<Map<String, dynamic>>('_versions') ?? <String, dynamic>{};
+    _versions =
+        await getConf<Map<String, dynamic>>('_versions') ?? <String, dynamic>{};
 
     log('Initialized');
   }
@@ -107,7 +107,8 @@ mixin DatabaseLoader on Module {
       } else if (query is FutureOr<void> Function()) {
         await query();
       } else {
-        throw ArgumentError('dbSetup contained ${query.runtimeType} at index $i, String or FutureOr<void> Function() expected');
+        throw ArgumentError(
+            'dbSetup contained ${query.runtimeType} at index $i, String or FutureOr<void> Function() expected');
       }
 
       database._versions[canonicalName] = i + 1;

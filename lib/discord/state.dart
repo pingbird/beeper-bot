@@ -1,24 +1,25 @@
 import 'dart:async';
 
+import 'package:beeper/discord/connection.dart';
+import 'package:beeper/discord/discord.dart';
+import 'package:beeper/discord/http.dart';
 import 'package:beeper_common/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
-
-import 'package:beeper/discord/connection.dart';
-import 'package:beeper/discord/guild.dart';
-import 'package:beeper/discord/discord.dart';
-import 'package:beeper/discord/http.dart';
 
 extension DiscordStateInternal on DiscordState {
   HttpService get http => _connection.http;
   DiscordConnection get connection => _connection;
   DiscordGuild updateGuildEntity(dynamic data) => _updateGuildEntity(data);
   DiscordUser updateUserEntity(dynamic data) => _updateUserEntity(data);
-  DiscordChannel updateChannelEntity(dynamic data) => _updateChannelEntity(data);
-  DiscordMember updateMemberEntity(dynamic data, {
+  DiscordChannel updateChannelEntity(dynamic data) =>
+      _updateChannelEntity(data);
+  DiscordMember updateMemberEntity(
+    dynamic data, {
     @required DiscordGuild guild,
     DiscordUser user,
-  }) => _updateMemberEntity(data, guild: guild, user: user);
+  }) =>
+      _updateMemberEntity(data, guild: guild, user: user);
   DiscordMessage wrapMessage(dynamic data) => _wrapMessage(data);
 
   DiscordUser get internalUser => _userSubject.value;
@@ -41,8 +42,10 @@ abstract class DiscordState {
   Stream<DiscordMessage> get onMessageCreate => _onMessageCreate.stream;
   final _onMessageCreate = StreamController<DiscordMessage>.broadcast();
 
-  Stream<Map<String, dynamic>> get onRawMessageCreate => _onRawMessageCreate.stream;
-  final _onRawMessageCreate = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get onRawMessageCreate =>
+      _onRawMessageCreate.stream;
+  final _onRawMessageCreate =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   DiscordState({
     @required DiscordConnection connection,
@@ -90,7 +93,8 @@ abstract class DiscordState {
   }
 
   DiscordConnectionState get connectionState => _connection.state;
-  ValueStream<DiscordConnectionState> get connectionStates => _connection.states;
+  ValueStream<DiscordConnectionState> get connectionStates =>
+      _connection.states;
 
   final _userSubject = BehaviorSubject<DiscordUser>();
 
@@ -102,10 +106,13 @@ abstract class DiscordState {
   DiscordGuild _updateGuildEntity(dynamic data) {
     final id = int.parse(data['id'] as String);
     _members[id] ??= {};
-    final guild = _guilds.putIfAbsent(id, () => DiscordGuild(
-      discord: this as Discord,
-      id: id,
-    ));
+    final guild = _guilds.putIfAbsent(
+      id,
+      () => DiscordGuild(
+        discord: this as Discord,
+        id: id,
+      ),
+    );
     guild.updateEntity(data);
 
     if (data['channels'] != null) {
@@ -117,10 +124,13 @@ abstract class DiscordState {
 
   DiscordUser _updateUserEntity(dynamic data) {
     final id = int.parse(data['id'] as String);
-    final user = _users.putIfAbsent(id, () => DiscordUser(
-      discord: this as Discord,
-      id: id,
-    ));
+    final user = _users.putIfAbsent(
+      id,
+      () => DiscordUser(
+        discord: this as Discord,
+        id: id,
+      ),
+    );
     user.updateEntity(data);
     return user;
   }
@@ -131,28 +141,39 @@ abstract class DiscordState {
     if (data['guild_id'] != null) {
       guild = _guilds[int.parse(data['guild_id'] as String)];
       if (guild == null) {
-        logger.log('discord', 'Guild for channel $id could not be found', level: LogLevel.warning);
+        logger.log(
+          'discord',
+          'Guild for channel $id could not be found',
+          level: LogLevel.warning,
+        );
       }
     }
-    final user = _channels.putIfAbsent(id, () => DiscordChannel(
-      discord: this as Discord,
-      id: id,
-      kind: DiscordChannelKind.values[data['type'] as int],
-      guild: guild,
-    ));
+    final user = _channels.putIfAbsent(
+      id,
+      () => DiscordChannel(
+        discord: this as Discord,
+        id: id,
+        kind: DiscordChannelKind.values[data['type'] as int],
+        guild: guild,
+      ),
+    );
     user.updateEntity(data);
     return user;
   }
 
-  DiscordMember _updateMemberEntity(dynamic data, {
+  DiscordMember _updateMemberEntity(
+    dynamic data, {
     @required DiscordGuild guild,
     DiscordUser user,
   }) {
     user ??= _updateUserEntity(data['user']);
-    final member = _members[guild.id].putIfAbsent(user.id, () => DiscordMember(
-      guild: guild,
-      user: user,
-    ));
+    final member = _members[guild.id].putIfAbsent(
+      user.id,
+      () => DiscordMember(
+        guild: guild,
+        user: user,
+      ),
+    );
     member.updateEntity(data);
     return member;
   }
@@ -162,7 +183,11 @@ abstract class DiscordState {
     final channelId = int.parse(data['channel_id'] as String);
     final channel = _channels[channelId];
     if (channel == null) {
-      logger.log('discord', 'Channel $channelId for message $id could not be found', level: LogLevel.warning);
+      logger.log(
+        'discord',
+        'Channel $channelId for message $id could not be found',
+        level: LogLevel.warning,
+      );
     }
     final user = _updateUserEntity(data['author']);
     return DiscordMessage(

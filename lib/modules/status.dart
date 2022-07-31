@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:meta/meta.dart';
-
-import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules.dart';
+import 'package:beeper_common/logging.dart';
+import 'package:meta/meta.dart';
 
 class StatusUpdateEvent {
   final Module module;

@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:beeper/generators/common.dart';
-import 'package:source_gen/source_gen.dart';
-import 'package:build/build.dart';
-import 'package:strings/strings.dart' show escape;
 import 'package:analyzer/dart/element/element.dart';
+import 'package:beeper/generators/common.dart';
+import 'package:build/build.dart';
+import 'package:source_gen/source_gen.dart';
+import 'package:strings/strings.dart' show escape;
 
 class ModulesBuilder extends AggregateBuilder {
   @override
@@ -22,7 +22,8 @@ class ModulesBuilder extends AggregateBuilder {
       final typeSystem = library.typeSystem;
       final classElements = <ClassElement>[];
       for (final cls in LibraryReader(library).classes) {
-        if (!cls.isAbstract && typeSystem.isAssignableTo(cls.thisType, moduleType)) {
+        if (!cls.isAbstract &&
+            typeSystem.isAssignableTo(cls.thisType, moduleType)) {
           classElements.add(cls);
         }
       }
@@ -33,13 +34,15 @@ class ModulesBuilder extends AggregateBuilder {
 
     final out = StringBuffer();
 
+    out.writeln(
+      '// ignore_for_file: directives_ordering, prefer_const_constructors',
+    );
+
     out.writeln('import \'package:beeper/modules.dart\';');
 
     for (final lib in libs.entries) {
-      out.writeln(
-        'import \'${escape('${lib.key.source.uri}')}\' '
-        'show ${lib.value.map((e) => e.name).join(', ')};'
-      );
+      out.writeln('import \'${escape('${lib.key.source.uri}')}\' '
+          'show ${lib.value.map((e) => e.name).join(', ')};');
     }
 
     out.writeln('Map<Type, Metadata> get moduleMetadata => {');
@@ -49,9 +52,11 @@ class ModulesBuilder extends AggregateBuilder {
 
       final metadata = cls.getMetadata(metadataType);
       if (metadata == null) {
-        throw StateError('Module ${cls.name} from ${cls.library.source} does not have metadata');
+        throw StateError(
+            'Module ${cls.name} from ${cls.library.source} does not have metadata');
       } else if (cls.unnamedConstructor == null) {
-        throw StateError('Module ${cls.name} from ${cls.library.source} does not have a default constructor');
+        throw StateError(
+            'Module ${cls.name} from ${cls.library.source} does not have a default constructor');
       }
       final ctorArgs = cls.unnamedConstructor.parameters;
 
@@ -63,23 +68,22 @@ class ModulesBuilder extends AggregateBuilder {
       } else if (lazyLoad != false) {
         for (final arg in ctorArgs) {
           if (!arg.isNamed) {
-            throw StateError('Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
+            throw StateError(
+                'Constructor of module ${cls.name} from ${cls.library.source} has an un-named argument "${arg.name}"');
           }
-          args.add('${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: false)}');
+          args.add(
+              '${arg.name}: data[\'${arg.name}\'] as ${arg.type.getDisplayString(withNullability: false)}');
         }
       }
 
       lazyLoad ??= true;
 
-      out.writeln(
-        '$name: Metadata('
-        'name: \'${escape(metadata.getField('name').toStringValue())}\', '
-        'lazyLoad: $lazyLoad, ' + (
-          lazyLoad
-            ? 'factory: (dynamic data) => $name(${args.join(', ')})),'
-            : 'factory: null),'
-        )
-      );
+      out.writeln('$name: Metadata('
+              'name: \'${escape(metadata.getField('name').toStringValue())}\', '
+              'lazyLoad: $lazyLoad, ' +
+          (lazyLoad
+              ? 'factory: (dynamic data) => $name(${args.join(', ')})),'
+              : 'factory: null),'));
     }
 
     out.writeln('};\n');
@@ -102,19 +106,16 @@ class ModulesBuilder extends AggregateBuilder {
           continue;
         }
 
-        final varName =
-          mixinName.substring(0, 1).toLowerCase()
-          + mixinName.substring(1, mixinName.length - 'Loader'.length);
-        out.writeln(
-          'mixin $mixinName on Module {\n'
-          '  $name $varName;\n\n'
-          '  @override\n'
-          '  Future<void> load() async {\n'
-          '    await super.load();\n'
-          '    $varName = await scope.require();\n'
-          '  }\n'
-          '}\n'
-        );
+        final varName = mixinName.substring(0, 1).toLowerCase() +
+            mixinName.substring(1, mixinName.length - 'Loader'.length);
+        out.writeln('mixin $mixinName on Module {\n'
+            '  $name $varName;\n\n'
+            '  @override\n'
+            '  Future<void> load() async {\n'
+            '    await super.load();\n'
+            '    $varName = await scope.require();\n'
+            '  }\n'
+            '}\n');
       }
     }
 

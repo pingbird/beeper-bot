@@ -15,7 +15,8 @@ mixin Disposer on Module {
       if (object is StreamSubscription) {
         await object.cancel();
       } else {
-        throw StateError('Could not dispose object of type ${object.runtimeType}: Unknown type');
+        throw StateError(
+            'Could not dispose object of type ${object.runtimeType}: Unknown type');
       }
     }
     _objects.clear();

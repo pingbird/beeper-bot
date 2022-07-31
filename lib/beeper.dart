@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:yaml/yaml.dart';
-import 'package:meta/meta.dart';
-import 'package:hotreloader/hotreloader.dart';
-
-import 'package:beeper_common/logging.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
+import 'package:beeper_common/logging.dart';
+import 'package:meta/meta.dart';
+import 'package:yaml/yaml.dart';
 
 extension ModuleBotExtension on Module {
   Bot get bot => system as Bot;
@@ -39,7 +37,10 @@ class Bot extends ModuleSystem {
       version = config['version'] as String;
     } else {
       try {
-        final result = await Process.run('git', ['rev-parse', '--short', 'HEAD']);
+        final result = await Process.run(
+          'git',
+          ['rev-parse', '--short', 'HEAD'],
+        );
         version = result.stdout.toString().trim();
         if (version.isEmpty) {
           version = 'unknown';
@@ -62,13 +63,18 @@ class Bot extends ModuleSystem {
       scope.inject<StatusModule>(StatusModule(_logEvents.stream));
 
       for (final config in config['modules']) {
-        final candidates = moduleMetadata.entries.where((e) => e.value.name == config['type']);
+        final candidates =
+            moduleMetadata.entries.where((e) => e.value.name == config['type']);
         if (candidates.isEmpty) {
-          throw StateError('Could not find module with name "${config['type']}"');
+          throw StateError(
+            'Could not find module with name "${config['type']}"',
+          );
         }
         final metadata = candidates.single;
         if (!metadata.value.lazyLoad) {
-          throw StateError('Attempted to load module from config that cannot be lazy-loaded: "${metadata.value.name}"');
+          throw StateError(
+            'Attempted to load module from config that cannot be lazy-loaded: "${metadata.value.name}"',
+          );
         }
         final module = metadata.value.factory(config);
         await scope.injectWith(metadata.key, module, id: config['id']);
@@ -82,9 +88,13 @@ class Bot extends ModuleSystem {
     final configStat = file.statSync();
 
     if (configStat.type != FileSystemEntityType.file) {
-      throw Exception('Configuration file config/bot.yaml not found or of wrong type');
+      throw Exception(
+        'Configuration file config/bot.yaml not found or of wrong type',
+      );
     } else if (!Platform.isWindows && configStat.mode & 7 != 0) {
-      throw Exception('Configuration file is accessible to outside users, mode 660 is recommended');
+      throw Exception(
+        'Configuration file is accessible to outside users, mode 660 is recommended',
+      );
     }
 
     return Bot(config: loadYaml(await file.readAsString()));

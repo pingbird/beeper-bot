@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:meta/meta.dart';
-import 'package:build/build.dart';
-import 'package:glob/glob.dart';
-import 'package:path/path.dart' show join;
-import 'package:dart_style/dart_style.dart' show DartFormatter;
-import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/constant/value.dart';
+import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:build/build.dart';
+import 'package:dart_style/dart_style.dart' show DartFormatter;
+import 'package:glob/glob.dart';
+import 'package:meta/meta.dart';
+import 'package:path/path.dart' show join;
 
 class AggregateContext {
   final AggregateBuilder builder;
@@ -20,9 +20,7 @@ class AggregateContext {
 
   Future<void> output(String name, String contents) {
     try {
-      final formatter = DartFormatter(
-        pageWidth: 1024,
-      );
+      final formatter = DartFormatter();
       contents = formatter.format(contents);
     } catch (e, bt) {
       stderr.writeln('Formatting failed with: $e\n$bt');
@@ -60,17 +58,16 @@ abstract class AggregateBuilder extends Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => {
-    r'$lib$': [
-      for (final output in outputs) 'gen/$output.g.dart'
-    ]
-  };
+        r'$lib$': [for (final output in outputs) 'gen/$output.g.dart']
+      };
 
   Future<void> buildAggregate(AggregateContext context);
 
   @override
   Future<void> build(BuildStep buildStep) async {
     try {
-      await buildAggregate(AggregateContext(builder: this, buildStep: buildStep));
+      await buildAggregate(
+          AggregateContext(builder: this, buildStep: buildStep));
     } catch (e, bt) {
       // Build eats the stack trace for whatever reason, catch and print it manually.
       stderr.writeln(e);

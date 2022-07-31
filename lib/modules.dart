@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:beeper/gen/modules.g.dart';
 import 'package:meta/meta.dart';
 import 'package:tuple/tuple.dart';
-
-import 'package:beeper/gen/modules.g.dart';
 
 export 'package:beeper/gen/modules.g.dart';
 
@@ -39,9 +38,11 @@ abstract class Module {
   bool get loaded => _loaded.isCompleted;
 
   String get canonicalName {
-    final key = scope.modules.entries.singleWhere(
-      (element) => element.value == this,
-    ).key;
+    final key = scope.modules.entries
+        .singleWhere(
+          (element) => element.value == this,
+        )
+        .key;
     final metadata = moduleMetadata[key.item1];
     final scopeName = scope.canonicalName;
     if (key.item2 == null) {
@@ -94,7 +95,8 @@ class ModuleScope {
   ModuleScope _inherit;
 
   Map<Object, ModuleScope> get children => UnmodifiableMapView(_children);
-  Map<Tuple2<Type, Object>, Module> get modules => UnmodifiableMapView(_modules);
+  Map<Tuple2<Type, Object>, Module> get modules =>
+      UnmodifiableMapView(_modules);
 
   String _canonicalName;
 
@@ -103,7 +105,9 @@ class ModuleScope {
       if (parent == null) {
         _canonicalName = '';
       } else {
-        final key = children.entries.singleWhere((element) => element.value == this).key;
+        final key = children.entries
+            .singleWhere((element) => element.value == this)
+            .key;
         _canonicalName = '${parent.canonicalName}/$key';
       }
     }
@@ -150,7 +154,9 @@ class ModuleScope {
     if (_modules.containsKey(key)) {
       final module = _modules[key];
       if (!module._loaded.isCompleted) {
-        throw StateError('Cannot access module that has not finished initialization`');
+        throw StateError(
+          'Cannot access module that has not finished initialization`',
+        );
       }
       return module;
     } else if (_inherit != null && _inherit._modules.containsKey(key)) {
@@ -219,7 +225,8 @@ class ModuleScope {
     );
   }
 
-  Future<void> inject<T extends Module>(Module module, [Object id]) => injectWith(T, module, id: id);
+  Future<void> inject<T extends Module>(Module module, [Object id]) =>
+      injectWith(T, module, id: id);
 
   void dispose() {
     for (final scope in children.values) {

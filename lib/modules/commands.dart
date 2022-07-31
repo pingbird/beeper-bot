@@ -1,14 +1,13 @@
 import 'dart:async';
 
-import 'package:beeper/modules/database.dart';
-import 'package:beeper_common/logging.dart';
-import 'package:beeper/modules/status.dart';
-import 'package:meta/meta.dart';
-
+import 'package:beeper/gen/commands.g.dart';
 import 'package:beeper/modules.dart';
+import 'package:beeper/modules/database.dart';
 import 'package:beeper/modules/discord.dart';
 import 'package:beeper/modules/disposer.dart';
-import 'package:beeper/gen/commands.g.dart';
+import 'package:beeper/modules/status.dart';
+import 'package:beeper_common/logging.dart';
+import 'package:meta/meta.dart';
 
 class Command {
   final String name;
@@ -138,7 +137,8 @@ class CommandArgs {
       while (!check('"')) {
         final c = read();
         if (c == null) {
-          throw const CommandError('Parse error: \'"\' expected before end of input');
+          throw const CommandError(
+              'Parse error: \'"\' expected before end of input');
         }
         if (c == '\\') {
           out += String.fromCharCode(readEscapedChar());
@@ -171,7 +171,8 @@ class CommandArgs {
           skipSpace();
           final value = readValue();
           if (value == null) {
-            throw const CommandError('Parse error: argument expected before end of input');
+            throw const CommandError(
+                'Parse error: argument expected before end of input');
           }
           named[name] = value;
           continue;
@@ -269,8 +270,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
     _closed.complete();
 
     return Future.wait<void>([
-      for (final subscription in _subscriptions)
-        subscription.cancel(),
+      for (final subscription in _subscriptions) subscription.cancel(),
       _controller.close(),
     ]);
   }
@@ -283,8 +283,7 @@ class CommandInvocation implements StreamSink<String>, StringSink {
 
 @Metadata(name: 'commands', loadable: true)
 class CommandsModule extends Module
-  with Disposer, DiscordLoader, DatabaseLoader, StatusLoader {
-
+    with Disposer, DiscordLoader, DatabaseLoader, StatusLoader {
   final activeCommands = <String, CommandEntry>{};
 
   final _commandPattern = RegExp('([^ \\r\\n\\t]*)([\\s\\S]*)');
@@ -339,9 +338,8 @@ class CommandsModule extends Module
         if (match == null) {
           continue;
         }
-        final invocation = createInvocation(
-          content.substring(match.end).trimLeft()
-        );
+        final invocation =
+            createInvocation(content.substring(match.end).trimLeft());
         if (invocation == null) {
           break;
         }
@@ -350,7 +348,8 @@ class CommandsModule extends Module
           await invocation.call();
           await message.reply(invocation.result);
         } catch (e, bt) {
-          log('Error processing command in message ${message.id}:\n$e\n$bt', level: LogLevel.error);
+          log('Error processing command in message ${message.id}:\n$e\n$bt',
+              level: LogLevel.error);
         }
       }
     }));

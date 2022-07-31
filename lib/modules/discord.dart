@@ -1,9 +1,8 @@
-import 'package:meta/meta.dart';
-
-import 'package:beeper/secrets.dart';
+import 'package:beeper/discord/discord.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/status.dart';
-import 'package:beeper/discord/discord.dart';
+import 'package:beeper/secrets.dart';
+import 'package:meta/meta.dart';
 
 mixin DiscordLoader on Module {
   Discord discord;
@@ -40,12 +39,13 @@ class DiscordModule extends Module with StatusLoader {
       status = {
         'connected': state.isConnected,
         'guilds': discord.guilds.length,
-        if (discord.user != null) 'user': {
-          'id': discord.user.id,
-          'name': discord.user.name,
-          'discriminator': discord.user.discriminator,
-          'avatar': discord.user.avatar().toString(),
-        },
+        if (discord.user != null)
+          'user': {
+            'id': discord.user.id,
+            'name': discord.user.name,
+            'discriminator': discord.user.discriminator,
+            'avatar': discord.user.avatar().toString(),
+          },
       };
     });
 

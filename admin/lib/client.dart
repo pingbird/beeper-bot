@@ -2,12 +2,10 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
-import 'package:meta/meta.dart';
-
-import 'package:websocket/websocket.dart';
 import 'package:beeper_common/logging.dart';
+import 'package:meta/meta.dart';
+import 'package:websocket/websocket.dart';
 
 class BeeperInfo {
   DateTime started;

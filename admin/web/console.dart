@@ -3,10 +3,9 @@
 import 'dart:async';
 import 'dart:html';
 
-import 'package:intl/intl.dart';
-
-import 'package:beeper_common/logging.dart';
 import 'package:admin/client.dart';
+import 'package:beeper_common/logging.dart';
+import 'package:intl/intl.dart';
 
 void tabBarSetup() {
   final tabBar = querySelector('#tab-bar');
@@ -106,8 +105,10 @@ class ConsoleConnectionManager {
   void updateDiscordStatus(dynamic data) {
     final dynamic user = data['user'];
     if (user != null) {
-      querySelector('#status-avatar').style.backgroundImage = 'url("${user['avatar']}")';
-      querySelector('#status-name').text = 'Connected as ${user['name']}#${user['discriminator']}';
+      querySelector('#status-avatar').style.backgroundImage =
+          'url("${user['avatar']}")';
+      querySelector('#status-name').text =
+          'Connected as ${user['name']}#${user['discriminator']}';
     }
   }
 
@@ -139,7 +140,9 @@ class ConsoleConnectionManager {
       for (final entry in stats.entries)
         LIElement()
           ..children = [
-            SpanElement()..classes.add('key')..text = entry.key,
+            SpanElement()
+              ..classes.add('key')
+              ..text = entry.key,
             SpanElement()..text = entry.value.toString(),
           ]
     ];
@@ -147,20 +150,20 @@ class ConsoleConnectionManager {
 
   void addLogEvent(LogEvent event) {
     querySelector('#logs-view').children.add(
-      DivElement()
-        ..classes.add('log-event')
-        ..children.addAll([
           DivElement()
-            ..classes.add('log-timestamp')
-            ..text = formatDatePrecise(event.time),
-          DivElement()
-            ..classes.add('log-service')
-            ..text = event.name,
-          PreElement()
-            ..classes.add('log-content')
-            ..text = event.content,
-        ]),
-    );
+            ..classes.add('log-event')
+            ..children.addAll([
+              DivElement()
+                ..classes.add('log-timestamp')
+                ..text = formatDatePrecise(event.time),
+              DivElement()
+                ..classes.add('log-service')
+                ..text = event.name,
+              PreElement()
+                ..classes.add('log-content')
+                ..text = event.content,
+            ]),
+        );
   }
 
   void startTimer() {
@@ -169,7 +172,8 @@ class ConsoleConnectionManager {
     void updateTime() {
       final now = DateTime.now().millisecondsSinceEpoch;
       final started = info.started.millisecondsSinceEpoch;
-      querySelector('#header-uptime').text = 'Up ${timeString((now - started) / 1000)}';
+      querySelector('#header-uptime').text =
+          'Up ${timeString((now - started) / 1000)}';
     }
 
     updateTime();
@@ -187,13 +191,13 @@ class ConsoleConnectionManager {
 
     info = await connection.start(
       Uri.base.queryParameters['connect'] != null
-        ? Uri.parse(Uri.base.queryParameters['connect'])
-        : Uri(
-          scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
-          host: Uri.base.host,
-          port: Uri.base.port,
-          path: '/ws',
-        ),
+          ? Uri.parse(Uri.base.queryParameters['connect'])
+          : Uri(
+              scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
+              host: Uri.base.host,
+              port: Uri.base.port,
+              path: '/ws',
+            ),
     );
 
     startTimer();
