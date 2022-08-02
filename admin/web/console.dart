@@ -1,4 +1,4 @@
-// @dart=2.9
+
 
 import 'dart:async';
 import 'dart:html';
@@ -8,8 +8,8 @@ import 'package:beeper_common/logging.dart';
 import 'package:intl/intl.dart';
 
 void tabBarSetup() {
-  final tabBar = querySelector('#tab-bar');
-  final tabView = querySelector('#tab-view');
+  final tabBar = querySelector('#tab-bar')!;
+  final tabView = querySelector('#tab-view')!;
 
   void selectTab(int i) {
     for (var j = 0; j < tabBar.children.length; j++) {
@@ -30,7 +30,7 @@ void tabBarSetup() {
   }
 
   for (var i = 0; i < tabBar.children.length; i++) {
-    tabNames.add(filterTabName(tabBar.children[i].text));
+    tabNames.add(filterTabName(tabBar.children[i].text!));
     tabBar.children[i].onClick.listen((event) {
       window.location.hash = tabNames[i];
       selectTab(i);
@@ -75,7 +75,7 @@ String timeString(num dt) {
   }
 
   String c(String n) {
-    final t = (dt / _rt[n]).floor() % _wt[n];
+    final t = (dt / _rt[n]!).floor() % _wt[n]!;
     return "$t $n${t != 1 ? "s" : ""}";
   }
 
@@ -99,15 +99,15 @@ String timeString(num dt) {
 class ConsoleConnectionManager {
   final statuses = <String, dynamic>{};
 
-  BeeperConnection connection;
-  BeeperInfo info;
+  late BeeperConnection connection;
+  late BeeperInfo info;
 
   void updateDiscordStatus(dynamic data) {
     final dynamic user = data['user'];
     if (user != null) {
-      querySelector('#status-avatar').style.backgroundImage =
+      querySelector('#status-avatar')!.style.backgroundImage =
           'url("${user['avatar']}")';
-      querySelector('#status-name').text =
+      querySelector('#status-name')!.text =
           'Connected as ${user['name']}#${user['discriminator']}';
     }
   }
@@ -136,7 +136,7 @@ class ConsoleConnectionManager {
       },
     };
 
-    querySelector('#stats-list').children = [
+    querySelector('#stats-list')!.children = [
       for (final entry in stats.entries)
         LIElement()
           ..children = [
@@ -149,7 +149,7 @@ class ConsoleConnectionManager {
   }
 
   void addLogEvent(LogEvent event) {
-    querySelector('#logs-view').children.add(
+    querySelector('#logs-view')!.children.add(
           DivElement()
             ..classes.add('log-event')
             ..children.addAll([
@@ -166,13 +166,13 @@ class ConsoleConnectionManager {
         );
   }
 
-  void startTimer() {
-    Timer timer;
+  Timer? timer;
 
+  void startTimer() {
     void updateTime() {
       final now = DateTime.now().millisecondsSinceEpoch;
       final started = info.started.millisecondsSinceEpoch;
-      querySelector('#header-uptime').text =
+      querySelector('#header-uptime')!.text =
           'Up ${timeString((now - started) / 1000)}';
     }
 
@@ -191,7 +191,7 @@ class ConsoleConnectionManager {
 
     info = await connection.start(
       Uri.base.queryParameters['connect'] != null
-          ? Uri.parse(Uri.base.queryParameters['connect'])
+          ? Uri.parse(Uri.base.queryParameters['connect']!)
           : Uri(
               scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
               host: Uri.base.host,
@@ -204,7 +204,7 @@ class ConsoleConnectionManager {
 
     updateStatsList();
 
-    querySelector('#header-version').text = info.version;
+    querySelector('#header-version')!.text = info.version;
   }
 }
 

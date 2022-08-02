@@ -73,7 +73,7 @@ class AdminModule extends Module with StatusLoader, Disposer {
     }
   }
 
-  final statuses = <String, dynamic>{};
+  var statuses = <String, dynamic>{};
 
   Future<void> _handleWebsocket(HttpRequest request) async {
     final socket = await WebSocketTransformer.upgrade(request);
@@ -124,26 +124,22 @@ class AdminModule extends Module with StatusLoader, Disposer {
       );
 
       const LineSplitter()
-          .bind(
-        utf8.decoder.bind(webdevProcess!.stdout),
-      )
+          .bind(utf8.decoder.bind(webdevProcess!.stdout))
           .listen((event) {
         if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
-          log(event.codeUnits.toString());
+          log('webdev: $event');
         }
       });
 
       const LineSplitter()
-          .bind(
-        utf8.decoder.bind(webdevProcess!.stderr),
-      )
-          .listen((event) {
-        log(event, level: LogLevel.warning);
-      });
+          .bind(utf8.decoder.bind(webdevProcess!.stderr))
+          .listen((event) => log('webdev: $event', level: LogLevel.warning));
 
       webdevProcess!.exitCode.then((exitCode) {
-        log('webdev exited with status code $exitCode',
-            level: LogLevel.warning);
+        log(
+          'webdev exited with status code $exitCode',
+          level: LogLevel.warning,
+        );
       });
     }
 
@@ -153,13 +149,22 @@ class AdminModule extends Module with StatusLoader, Disposer {
           await _handleWebsocket(client);
         } else if (development) {
           await handleRequest(
-              client, proxyHandler('http://localhost:$webdevPort'));
+            client,
+            proxyHandler('http://localhost:$webdevPort'),
+          );
+        } else {
+          await _handleError(
+            client,
+            404,
+            'Forgot to configure nginx?',
+          );
         }
       } catch (e, bt) {
         await _handleError(client, 500, '$e\n$bt');
       }
     }));
 
+    statuses = statusModule.getStatuses();
     queueDispose(statusModule.updates.listen((event) {
       final name = event.module.canonicalName;
       if (event.data == null) {

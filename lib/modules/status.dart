@@ -22,6 +22,25 @@ class StatusModule extends Module {
   final _updateController = StreamController<StatusUpdateEvent>.broadcast();
 
   Stream<StatusUpdateEvent> get updates => _updateController.stream;
+
+  Map<String, dynamic> getStatuses() {
+    final statuses = <String, dynamic>{};
+
+    void add(Module m) {
+      if (m is StatusLoader) {
+        statuses[m.canonicalName] = m._status;
+      }
+    }
+
+    void visit(ModuleScope s) {
+      s.modules.values.forEach(add);
+      s.children.values.forEach(visit);
+    }
+
+    visit(system.scope);
+
+    return statuses;
+  }
 }
 
 mixin StatusLoader on Module {
@@ -32,6 +51,8 @@ mixin StatusLoader on Module {
   dynamic get status => _status;
   set status(dynamic data) {
     if (data == _status || !_loaded) return;
+
+    _status = data;
     statusModule._updateController.add(
       StatusUpdateEvent(
         module: this,

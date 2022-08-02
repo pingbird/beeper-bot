@@ -1,20 +1,17 @@
-// @dart=2.9
-
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 
 import 'package:beeper_common/logging.dart';
-import 'package:meta/meta.dart';
-import 'package:websocket/websocket.dart';
 
 class BeeperInfo {
-  DateTime started;
-  String version;
+  late DateTime started;
+  String? version;
 
   static BeeperInfo fromJson(dynamic data) {
     return BeeperInfo()
       ..started = DateTime.fromMillisecondsSinceEpoch(data['started'] as int)
-      ..version = data['version'] as String;
+      ..version = data['version'] as String?;
   }
 }
 
@@ -23,19 +20,20 @@ class BeeperConnection {
   final Function(LogEvent event) onLogEvent;
 
   BeeperConnection({
-    @required this.onStatusUpdate,
-    @required this.onLogEvent,
+    required this.onStatusUpdate,
+    required this.onLogEvent,
   });
 
   final info = Completer<BeeperInfo>();
-  WebSocket ws;
+  late WebSocket ws;
 
   void _start(Uri uri) async {
     print('[Beeper Console] Connecting to $uri');
-    ws = await WebSocket.connect(uri.toString());
-    await for (final message in ws.stream) {
-      final dynamic data = jsonDecode(message as String);
-      final type = data['t'] as String;
+    ws = WebSocket(uri.toString());
+    await for (final message in ws.onMessage) {
+      print('message! ${message.data}');
+      final dynamic data = jsonDecode(message.data as String);
+      final type = data['t'] as String?;
       if (type == 'status') {
         info.complete(BeeperInfo.fromJson(data['d']));
         final statuses = data['d']['statuses'] as Map<String, dynamic>;

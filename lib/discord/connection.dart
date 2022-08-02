@@ -88,6 +88,17 @@ class DiscordConnectionState {
         isWaiting: true,
         reason: reason,
       );
+
+  @override
+  String toString() {
+    return 'DiscordConnectionState(${[
+      if (isStarted) 'isStarted: true',
+      if (isError) 'isError: true',
+      if (isConnected) 'isConnected: true',
+      if (isWaiting) 'isWaiting: true',
+      if (reason != null) 'reason: "$reason"',
+    ].join(', ')})';
+  }
 }
 
 class DiscordConnection {

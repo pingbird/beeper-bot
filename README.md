@@ -11,12 +11,13 @@ modules:
     host: localhost
     port: 5432
     user: beeper
-    password: <database password>
+    password: localtesting1234
     database: beeper
   - type: discord
     token: <discord token>
   - type: admin
-    uri: localhost:4050
+    development: true
+    uri: http://localhost:4050
     assetPath: admin/build
   - type: ping
     response: pong

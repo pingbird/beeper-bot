@@ -139,27 +139,6 @@ mixin DatabaseLoader on Module {
     }
   }
 
-  Timer? _timer;
-  var _repeat = false;
-
-  void saveDbStorage() {
-    if (_timer != null) {
-      _repeat = !_timer!.isActive;
-    } else {
-      _repeat = false;
-      _timer = Timer(const Duration(seconds: 1), () async {
-        try {
-          await database.setConf(canonicalName, dbStorage);
-        } finally {
-          _timer = null;
-          if (_repeat) {
-            saveDbStorage();
-          }
-        }
-      });
-    }
-  }
-
   Iterable<dynamic> get dbSetup => const <dynamic>[];
 
   dynamic dbStorage;
