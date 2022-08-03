@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:beeper/modules.dart';
 import 'package:beeper_common/logging.dart';
+import 'package:collection/collection.dart';
 
 class StatusUpdateEvent {
   final Module module;
@@ -50,7 +51,9 @@ mixin StatusLoader on Module {
 
   dynamic get status => _status;
   set status(dynamic data) {
-    if (data == _status || !_loaded) return;
+    if (const DeepCollectionEquality().equals(data, _status) || !_loaded) {
+      return;
+    }
 
     _status = data;
     statusModule._updateController.add(

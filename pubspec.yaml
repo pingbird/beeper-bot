@@ -11,6 +11,7 @@ dependencies:
   beeper_common:
     path: common
   clock: ^1.0.1
+  collection: ^1.16.0
   http: ^0.13.4
   lints: ^2.0.0
   path: ^1.7.0
@@ -21,6 +22,7 @@ dependencies:
   stack_trace: ^1.9.6
   strings: ^0.2.2
   tuple: ^2.0.0
+  watcher: ^1.0.1
   yaml: ^3.1.0
 
 dev_dependencies:

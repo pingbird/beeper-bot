@@ -54,6 +54,15 @@ class DatabaseModule extends Module with StatusLoader {
 
   Future<void> _flushVersions() => setConf('_versions', _versions);
 
+  Timer? statusTimer;
+
+  Future<void> updateStatus() async {
+    final result = await con.query(
+      "SELECT pg_size_pretty( pg_database_size('$database') )",
+    );
+    status = {'size': result.single.single.toString()};
+  }
+
   @override
   Future<void> load() async {
     await super.load();
@@ -100,12 +109,20 @@ class DatabaseModule extends Module with StatusLoader {
     _versions =
         await getConf<Map<String, dynamic>>('_versions') ?? <String, dynamic>{};
 
+    await updateStatus();
+    statusTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (timer) => updateStatus(),
+    );
+
     log('Initialized');
   }
 
   @override
   void dispose() {
     super.dispose();
+    statusTimer?.cancel();
+    statusTimer = null;
     con.close();
   }
 }
@@ -131,7 +148,8 @@ mixin DatabaseLoader on Module {
         await query();
       } else {
         throw ArgumentError(
-            'dbSetup contained ${query.runtimeType} at index $i, String or FutureOr<void> Function() expected');
+          'dbSetup contained ${query.runtimeType} at index $i, String or FutureOr<void> Function() expected',
+        );
       }
 
       database._versions[canonicalName] = i + 1;

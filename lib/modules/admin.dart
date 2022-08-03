@@ -118,9 +118,10 @@ class AdminModule extends Module with StatusLoader, Disposer {
       log('Starting webdev');
 
       webdevProcess = await Process.start(
-        Platform.executable,
-        ['pub', 'global', 'run', 'webdev', 'serve', 'web:$webdevPort'],
-        workingDirectory: path.join(Directory.current.path, 'admin'),
+        'flutter',
+        ['run', '-d', 'web-server', '--web-port=$webdevPort'],
+        workingDirectory: path.join(Directory.current.path, 'admin2'),
+        runInShell: true,
       );
 
       const LineSplitter()
