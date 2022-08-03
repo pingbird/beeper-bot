@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:html' as html;
 
 import 'package:admin2/pages/status.dart';
 import 'package:admin2/tabs.dart';
+import 'package:beeper_common/admin.dart';
 import 'package:beeper_common/logging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -66,7 +69,10 @@ class _ConsolePageState extends State<ConsolePage>
           width: 1200,
           child: Column(
             children: [
-              StatusBar(info: info),
+              StatusBar(
+                info: info,
+                loginState: connection.loginState,
+              ),
               BeeperTabBar(
                 controller: controller,
                 children: const [
@@ -105,9 +111,11 @@ class StatusBar extends StatefulWidget {
   const StatusBar({
     Key? key,
     required this.info,
+    required this.loginState,
   }) : super(key: key);
 
   final BeeperInfo? info;
+  final ValueListenable<LoginStateDto?> loginState;
 
   @override
   State<StatusBar> createState() => _StatusBarState();
@@ -205,19 +213,54 @@ class _StatusBarState extends State<StatusBar> {
                 ],
               ),
             ),
-          ElevatedButton(
-            onPressed: () {},
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/discord.png',
-                  height: 16,
-                  filterQuality: FilterQuality.high,
-                ),
-                const SizedBox(width: 8),
-                const Text('Sign In'),
-              ],
-            ),
+          AnimatedBuilder(
+            animation: widget.loginState,
+            builder: (context, _) {
+              final loginState = widget.loginState.value;
+              if (loginState == null) {
+                return const SizedBox();
+              } else if (loginState.signedIn) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        spreadRadius: 4,
+                      )
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/beeper_small.png',
+                    width: 32,
+                    height: 32,
+                    filterQuality: FilterQuality.low,
+                  ),
+                );
+              } else {
+                return ElevatedButton(
+                  onPressed: () {
+                    final signInUri = BeeperConnection.baseUri.replace(
+                      path: '/sign_in',
+                    );
+                    html.window.open('$signInUri', '_self');
+                  },
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/discord.png',
+                        height: 16,
+                        filterQuality: FilterQuality.high,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('Sign In'),
+                    ],
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),

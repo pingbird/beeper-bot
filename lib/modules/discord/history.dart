@@ -49,6 +49,6 @@ class DiscordHistoryModule extends Module
         LastContent text,
         unique(MessageId, EditNumber)
       );
-    '''
+    ''',
       ];
 }

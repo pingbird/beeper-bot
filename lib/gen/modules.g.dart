@@ -17,7 +17,9 @@ Map<Type, Metadata> get moduleMetadata => {
               uri: data['uri'] as String,
               development: data['development'] as bool?,
               adminPort: data['adminPort'] as int?,
-              webdevPort: data['webdevPort'] as int?)),
+              webdevPort: data['webdevPort'] as int?,
+              oauthClientId: data['oauthClientId'] as String?,
+              oauthSecret: data['oauthSecret'] as String?)),
       CommandsModule: Metadata(
           name: 'commands',
           lazyLoad: true,

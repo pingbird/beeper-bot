@@ -1,50 +1,89 @@
-
-
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html';
 
-import 'package:admin/client.dart';
+import 'package:beeper_common/admin.dart';
 import 'package:beeper_common/logging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-void tabBarSetup() {
-  final tabBar = querySelector('#tab-bar')!;
-  final tabView = querySelector('#tab-view')!;
+class BeeperInfo {
+  late DateTime started;
+  String? version;
 
-  void selectTab(int i) {
-    for (var j = 0; j < tabBar.children.length; j++) {
-      if (j == i) {
-        tabView.children[j].classes.add('active');
-        tabBar.children[j].classes.add('active');
-      } else {
-        tabView.children[j].classes.remove('active');
-        tabBar.children[j].classes.remove('active');
-      }
+  static BeeperInfo fromJson(dynamic data) {
+    return BeeperInfo()
+      ..started = DateTime.fromMillisecondsSinceEpoch(data['started'] as int)
+      ..version = data['version'] as String?;
+  }
+}
+
+class BeeperConnection {
+  final Function(String module, dynamic data) onStatusUpdate;
+  final Function(LogEvent event) onLogEvent;
+
+  BeeperConnection({
+    required this.onStatusUpdate,
+    required this.onLogEvent,
+  });
+
+  final loginState = ValueNotifier<LoginStateDto?>(null);
+  late WebSocket ws;
+
+  static final Uri websocketUri = baseUri.replace(
+    scheme: baseUri.scheme == 'https' ? 'wss' : 'ws',
+    path: '/ws',
+  );
+
+  static final Uri baseUri = () {
+    const defaultConnectString = String.fromEnvironment('base_url');
+    if (defaultConnectString.isNotEmpty) {
+      return Uri.parse(defaultConnectString);
     }
-  }
+    return Uri.parse(window.location.href)
+        .replace(path: '', query: '')
+        .removeFragment();
+  }();
 
-  final tabNames = <String>[];
-
-  String filterTabName(String str) {
-    return str.toLowerCase().replaceAll('#', '').replaceAll(' ', '-');
-  }
-
-  for (var i = 0; i < tabBar.children.length; i++) {
-    tabNames.add(filterTabName(tabBar.children[i].text!));
-    tabBar.children[i].onClick.listen((event) {
-      window.location.hash = tabNames[i];
-      selectTab(i);
+  Future<BeeperInfo> start() {
+    http.get(baseUri.replace(path: 'state')).then((response) {
+      loginState.value = LoginStateDto.fromJson(jsonDecode(response.body));
     });
+
+    if (kDebugMode) {
+      print('[Beeper Console] Connecting to $websocketUri');
+    }
+    ws = WebSocket('$websocketUri');
+    final info = Completer<BeeperInfo>();
+    ws.onMessage.listen((message) {
+      final dynamic data = jsonDecode(message.data as String);
+      final type = data['t'] as String?;
+      if (type == 'status') {
+        info.complete(BeeperInfo.fromJson(data['d']));
+        final statuses = data['d']['statuses'] as Map<String, dynamic>;
+        for (final entry in statuses.entries) {
+          onStatusUpdate(entry.key, entry.value);
+        }
+        for (final event in data['d']['logs'] as List<dynamic>) {
+          onLogEvent(LogEvent.fromJson(event));
+        }
+      } else if (type == 'status_update') {
+        onStatusUpdate(data['m'] as String, data['d']);
+      } else if (type == 'log') {
+        onLogEvent(LogEvent.fromJson(data['d']));
+      }
+    });
+    return info.future;
   }
 
-  final index = tabNames.indexOf(filterTabName(window.location.hash));
-  if (index >= 0) {
-    selectTab(index);
+  void dispose() {
+    ws.close();
   }
 }
 
 String timeString(num dt) {
-  const _rt = <String, double>{
+  const rt = <String, double>{
     'millisecond': 0.001,
     'second': 1.0,
     'minute': 60.0,
@@ -54,7 +93,7 @@ String timeString(num dt) {
     'month': 2629800.0,
   };
 
-  const _wt = <String, int>{
+  const wt = <String, int>{
     'millisecond': 1000,
     'second': 60,
     'minute': 60,
@@ -75,7 +114,7 @@ String timeString(num dt) {
   }
 
   String c(String n) {
-    final t = (dt / _rt[n]!).floor() % _wt[n]!;
+    final t = (dt / rt[n]!).floor() % wt[n]!;
     return "$t $n${t != 1 ? "s" : ""}";
   }
 
@@ -182,33 +221,4 @@ class ConsoleConnectionManager {
       updateTime();
     });
   }
-
-  void start() async {
-    connection = BeeperConnection(
-      onStatusUpdate: updateStatus,
-      onLogEvent: addLogEvent,
-    );
-
-    info = await connection.start(
-      Uri.base.queryParameters['connect'] != null
-          ? Uri.parse(Uri.base.queryParameters['connect']!)
-          : Uri(
-              scheme: Uri.base.scheme == 'https' ? 'wss' : 'ws',
-              host: Uri.base.host,
-              port: Uri.base.port,
-              path: '/ws',
-            ),
-    );
-
-    startTimer();
-
-    updateStatsList();
-
-    querySelector('#header-version')!.text = info.version;
-  }
-}
-
-void main() {
-  tabBarSetup();
-  ConsoleConnectionManager().start();
 }
