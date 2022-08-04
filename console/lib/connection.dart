@@ -72,6 +72,9 @@ class BeeperConnection {
         onStatusUpdate(data['m'] as String, data['d']);
       } else if (type == 'log') {
         onLogEvent(LogEvent.fromJson(data['d']));
+      } else if (type == 'reload' && kDebugMode) {
+        print('reloading...');
+        window.location.reload();
       }
     });
     return info.future;

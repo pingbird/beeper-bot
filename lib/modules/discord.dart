@@ -40,7 +40,7 @@ class DiscordModule extends Module with StatusLoader {
         'guilds': discord.guilds.length,
         if (discord.user != null)
           'user': {
-            'id': discord.user!.id,
+            'snowflake': discord.user!.id.toString(),
             'name': discord.user!.name,
             'discriminator': discord.user!.discriminator,
             'avatar': discord.user!.avatar().toString(),

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:html' as html;
 
+import 'package:admin2/components/tabs.dart';
 import 'package:admin2/pages/status.dart';
-import 'package:admin2/tabs.dart';
 import 'package:beeper_common/admin.dart';
 import 'package:beeper_common/logging.dart';
 import 'package:flutter/foundation.dart';
@@ -122,6 +122,7 @@ class StatusBar extends StatefulWidget {
 }
 
 class _StatusBarState extends State<StatusBar> {
+  final dropdownButtonKey = GlobalKey();
   Timer? timer;
   String? uptime;
 
@@ -149,6 +150,23 @@ class _StatusBarState extends State<StatusBar> {
     if (widget.info != null && oldWidget.info == null) {
       updateUptime();
     }
+  }
+
+  void showDropdown() {
+    final navigator = Navigator.of(context);
+    final buttonRenderObject =
+        dropdownButtonKey.currentContext!.findRenderObject() as RenderBox;
+    final navigatorRenderObject = navigator.context.findRenderObject()!;
+    navigator.push(
+      _DropdownRoute(
+        builder: (context) => _Dropdown(loginState: widget.loginState),
+        anchor: buttonRenderObject.localToGlobal(
+          buttonRenderObject.size.bottomRight(Offset.zero),
+          ancestor: navigatorRenderObject,
+        ),
+        buttonHeight: buttonRenderObject.size.height,
+      ),
+    );
   }
 
   @override
@@ -220,23 +238,30 @@ class _StatusBarState extends State<StatusBar> {
               if (loginState == null) {
                 return const SizedBox();
               } else if (loginState.signedIn) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        spreadRadius: 4,
-                      )
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    'assets/beeper_small.png',
-                    width: 32,
-                    height: 32,
-                    filterQuality: FilterQuality.low,
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: showDropdown,
+                    child: Container(
+                      key: dropdownButtonKey,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            spreadRadius: 4,
+                          )
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.network(
+                        loginState.avatar!,
+                        width: 48,
+                        height: 48,
+                        filterQuality: FilterQuality.low,
+                      ),
+                    ),
                   ),
                 );
               } else {
@@ -263,6 +288,163 @@ class _StatusBarState extends State<StatusBar> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DropdownRoute<T> extends PopupRoute<T> {
+  _DropdownRoute({
+    required this.builder,
+    required this.anchor,
+    required this.buttonHeight,
+  });
+
+  final WidgetBuilder builder;
+  final Offset anchor;
+  final double buttonHeight;
+
+  @override
+  Color? get barrierColor => Colors.black12;
+
+  @override
+  bool get barrierDismissible => true;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: anchor.dy,
+              right: constraints.maxWidth - anchor.dx,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.topRight,
+                child: AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    final curvedAnimation = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.ease,
+                    );
+                    return Opacity(
+                      opacity: curvedAnimation.value,
+                      child: ClipPath(
+                        clipper: _AnimatedClipper(
+                          curvedAnimation.value,
+                          buttonHeight,
+                        ),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: builder(context),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 150);
+}
+
+class _AnimatedClipper extends CustomClipper<Path> {
+  _AnimatedClipper(this.dt, this.buttonHeight);
+
+  final double dt;
+  final double buttonHeight;
+
+  @override
+  Path getClip(Size size) {
+    final buttonRadius = buttonHeight / 2;
+    final center = Offset(size.width - buttonRadius, -buttonRadius);
+    final bottomLeft = size.bottomLeft(Offset.zero);
+    return Path()
+      ..addOval(
+        Rect.fromCircle(
+          center: center,
+          radius: buttonRadius + (bottomLeft - center).distance * dt,
+        ),
+      );
+  }
+
+  @override
+  bool shouldReclip(_AnimatedClipper oldClipper) => dt != oldClipper.dt;
+}
+
+class _Dropdown extends StatelessWidget {
+  const _Dropdown({
+    Key? key,
+    required this.loginState,
+  }) : super(key: key);
+
+  final ValueListenable<LoginStateDto?> loginState;
+
+  @override
+  Widget build(BuildContext context) {
+    final loginState = this.loginState.value;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      width: 300,
+      decoration: BoxDecoration(
+        color: const Color(0xff252729),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            spreadRadius: 4,
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              color: Theme.of(context).primaryColor,
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Signed in as ${loginState?.name}#${loginState?.discriminator}',
+              ),
+            ),
+            TextButton(
+              style: ButtonStyle(
+                shape: MaterialStateProperty.all(
+                  const RoundedRectangleBorder(),
+                ),
+              ),
+              onPressed: () {
+                final signOutUri = BeeperConnection.baseUri.replace(
+                  path: '/sign_out',
+                );
+                html.window.location.assign('$signOutUri');
+              },
+              child: const Align(
+                alignment: Alignment.centerRight,
+                child: Text('Sign out'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -49,7 +49,6 @@ Handler proxyHandler(
 
   return (serverRequest) async {
     final requestUrl = uri.resolve(serverRequest.url.toString());
-    print('requestUrl: $requestUrl');
     final clientRequest = http.StreamedRequest(serverRequest.method, requestUrl)
       ..followRedirects = false
       ..headers.addAll(serverRequest.headers)

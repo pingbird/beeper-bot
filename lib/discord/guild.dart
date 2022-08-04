@@ -55,7 +55,7 @@ class DiscordUser {
   });
 
   late String name;
-  late int discriminator;
+  late String discriminator;
   late String? avatarHash;
   late bool bot;
   late bool system;
@@ -65,7 +65,7 @@ class DiscordUser {
 
   void updateEntity(dynamic data) {
     name = data['username'] as String;
-    discriminator = int.parse(data['discriminator'] as String);
+    discriminator = data['discriminator'] as String;
     avatarHash = data['avatar'] as String?;
     bot = data['bot'] as bool? ?? false;
     system = data['system'] as bool? ?? false;
@@ -86,7 +86,7 @@ class DiscordUser {
       return Uri(
         scheme: 'https',
         host: 'cdn.discordapp.com',
-        path: 'embed/avatars/${discriminator % 5}.png',
+        path: 'embed/avatars/${int.parse(discriminator) % 5}.png',
       );
     } else {
       format ??= avatarHash!.startsWith('a_') ? 'gif' : 'png';

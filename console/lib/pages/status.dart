@@ -31,8 +31,7 @@ class StatusPage extends StatelessWidget {
           if (discordUser != null)
             DiscordUserTile(
               name: discordUser['name'],
-              discriminator:
-                  discordUser['discriminator'].toString().padLeft(4, '0'),
+              discriminator: discordUser['discriminator'],
               avatar: discordUser['avatar'],
               online: true,
               bot: true,
@@ -42,6 +41,8 @@ class StatusPage extends StatelessWidget {
                   : {
                       'Online Since': formatDate(info!.started),
                       'Plugins': '${statuses.length}',
+                      if (discordUser != null)
+                        'Snowflake': discordUser['snowflake'],
                       if (discordGuilds != null) 'Guilds': '$discordGuilds',
                       if (dbSize != null) 'DB Size': '$dbSize',
                     },

@@ -6,17 +6,21 @@ import 'dart:math' hide log;
 
 import 'package:beeper/beeper.dart';
 import 'package:beeper/common/shelf.dart';
+import 'package:beeper/discord/state.dart';
 import 'package:beeper/modules.dart';
 import 'package:beeper/modules/database.dart';
+import 'package:beeper/modules/discord.dart';
 import 'package:beeper/modules/disposer.dart';
 import 'package:beeper/modules/status.dart';
 import 'package:beeper_common/admin.dart';
+import 'package:beeper_common/debouncer.dart';
 import 'package:beeper_common/logging.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:pedantic/pedantic.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_static/shelf_static.dart';
+import 'package:watcher/watcher.dart';
 
 import '../common/http.dart';
 
@@ -72,6 +76,7 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
 
   late HttpServer server;
 
+  StreamSubscription? consoleWatcher;
   Process? webdevProcess;
 
   Future<void> _handleJson(
@@ -142,7 +147,6 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
         await for (final message in socket) {
           // TODO(ping): Do console stuff
           final dynamic data = jsonDecode(message as String);
-          print(data);
         }
       } catch (e, bt) {
         // TODO(ping): Logging framework
@@ -217,7 +221,6 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
       return null;
     }
     final row = result.single.toColumnMap();
-    print('$row');
     final expires = row['expires'] as DateTime;
     if (DateTime.now().isAfter(expires)) {
       await deleteSession(token);
@@ -227,6 +230,31 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
       expires: expires,
       discordAccessToken: row['discordaccesstoken'] as String?,
       discordRefreshToken: row['discordrefreshtoken'] as String?,
+    );
+  }
+
+  late final discord = scope.get<DiscordModule>()!.discord;
+  late final discordUserAgent = discord.connection.http.userAgent;
+  late final discordBaseUri = discord.connection.http.endpoint;
+
+  Future<LoginStateDto> getLoginState(String? token) async {
+    if (token == null) return LoginStateDto(signedIn: false);
+    final sessionState = await getSessionState(token);
+    if (sessionState == null) return LoginStateDto(signedIn: false);
+    final identityResponse = await http.get(
+      discordBaseUri.append(path: 'users/@me'),
+      headers: {
+        'authorization': 'Bearer ${sessionState.discordAccessToken}',
+        'user-agent': discordUserAgent,
+      },
+    );
+    HttpException.ensureSuccessRaw(identityResponse);
+    final user = discord.updateUserEntity(jsonDecode(identityResponse.body));
+    return LoginStateDto(
+      signedIn: true,
+      name: user.name,
+      discriminator: user.discriminator,
+      avatar: '${user.avatar(size: 64)}',
     );
   }
 
@@ -267,6 +295,7 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
       if (path == '/ws') {
         await _handleWebsocket(req);
       } else if (path == '/sign_in') {
+        if (req.method != 'GET') return _handleError(req, 405);
         // Create session
         var token = tokenFromRequest(req);
         if (token != null) {
@@ -288,18 +317,17 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
           return _handleError(req, 500, 'Missing oauthSecret');
         }
         _handleRedirect(req, authorizeUri);
+      } else if (path == '/sign_out') {
+        if (req.method != 'GET') return _handleError(req, 405);
+        final token = tokenFromRequest(req);
+        if (token != null) {
+          await deleteSession(token);
+        }
+        _handleRedirect(req, uri.append(path: 'console/'));
       } else if (path == '/state') {
         if (req.method != 'GET') return _handleError(req, 405);
         final token = tokenFromRequest(req);
-        if (token == null) {
-          return _handleJson(req, LoginStateDto(signedIn: false));
-        }
-        final state = await getSessionState(token);
-        if (state == null) {
-          return _handleJson(req, LoginStateDto(signedIn: false));
-        } else {
-          return _handleJson(req, LoginStateDto(signedIn: true));
-        }
+        _handleJson(req, await getLoginState(token));
       } else if (path == '/oauth2/redirect') {
         if (req.method != 'GET') return _handleError(req, 405);
         final token = tokenFromRequest(req);
@@ -330,7 +358,6 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
         _handleRedirect(req, uri.append(path: 'console/'));
       } else if (development) {
         if (pathSegments.isNotEmpty && pathSegments.first == 'console') {
-          print('proxying $path');
           await handleRequest(
             req,
             (e) => proxyHandler('http://localhost:$webdevPort')(
@@ -368,31 +395,67 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
     log('Visit at $uri');
 
     if (development) {
-      webdevProcess = await Process.start(
-        'flutter',
-        ['run', '-d', 'web-server', '--web-port=$webdevPort'],
-        workingDirectory: path.join(Directory.current.path, 'console'),
-        runInShell: true,
-      );
+      bool startWebServer;
+      try {
+        final socket = await Socket.connect('localhost', webdevPort);
+        socket.close();
+        startWebServer = false;
+      } on SocketException catch (_) {
+        startWebServer = true;
+      }
 
-      const LineSplitter()
-          .bind(utf8.decoder.bind(webdevProcess!.stdout))
-          .listen((event) {
-        if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
-          log('webdev: $event');
-        }
-      });
-
-      const LineSplitter()
-          .bind(utf8.decoder.bind(webdevProcess!.stderr))
-          .listen((event) => log('webdev: $event', level: LogLevel.warning));
-
-      webdevProcess!.exitCode.then((exitCode) {
-        log(
-          'webdev exited with status code $exitCode',
-          level: LogLevel.warning,
+      if (startWebServer) {
+        webdevProcess = await Process.start(
+          'flutter',
+          ['run', '-d', 'web-server', '--web-port=$webdevPort'],
+          workingDirectory: path.join(Directory.current.path, 'console'),
+          runInShell: true,
         );
-      });
+
+        void hotReload() => webdevProcess?.stdin.writeln('R');
+
+        final consoleDir = path.join(Directory.current.path, 'console');
+        final reloadDebouncer = Debouncer(
+          minDuration: const Duration(seconds: 1),
+          onUpdate: (_) => hotReload(),
+        );
+        consoleWatcher = Watcher(consoleDir).events.listen((ev) {
+          final relativePath = path.relative(ev.path, from: consoleDir);
+          final segments = path.split(relativePath);
+          if (segments.length > 1 &&
+              const [
+                'lib',
+                'assets',
+                'web',
+              ].contains(segments.first)) {
+            reloadDebouncer.add(null);
+          }
+        });
+
+        const LineSplitter()
+            .bind(utf8.decoder.bind(webdevProcess!.stdout))
+            .listen((event) {
+          if (!event.startsWith('[INFO]') && event != '\x1b[2K') {
+            if (development && event.startsWith('Restarted application in')) {
+              sendAll({
+                't': 'reload',
+              });
+            }
+            log('webdev: $event');
+          }
+        });
+
+        const LineSplitter()
+            .bind(utf8.decoder.bind(webdevProcess!.stderr))
+            .listen((event) => log('webdev: $event', level: LogLevel.warning));
+
+        webdevProcess!.exitCode.then((exitCode) {
+          log(
+            'webdev exited with status code $exitCode',
+            level: LogLevel.warning,
+          );
+        });
+      }
     }
 
     queueDispose(server.listen(_handleRequest));
@@ -426,7 +489,10 @@ class AdminModule extends Module with StatusLoader, DatabaseLoader, Disposer {
 
   @override
   Future<void> unload() async {
+    consoleWatcher?.cancel();
+    consoleWatcher = null;
     webdevProcess?.kill();
+    webdevProcess = null;
     statuses.clear();
     await super.unload();
   }
