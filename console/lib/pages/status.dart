@@ -24,31 +24,34 @@ class StatusPage extends StatelessWidget {
     final dbStatus = statuses['/database'];
     final dbSize = dbStatus?['size'];
 
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (discordUser != null)
-            DiscordUserTile(
-              name: discordUser['name'],
-              discriminator: discordUser['discriminator'],
-              avatar: discordUser['avatar'],
-              online: true,
-              bot: true,
-              backgroundColor: const Color(0xff6a805e),
-              aboutMe: info == null
-                  ? {}
-                  : {
-                      'Online Since': formatDate(info!.started),
-                      'Plugins': '${statuses.length}',
-                      if (discordUser != null)
-                        'Snowflake': discordUser['snowflake'],
-                      if (discordGuilds != null) 'Guilds': '$discordGuilds',
-                      if (dbSize != null) 'DB Size': '$dbSize',
-                    },
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (discordUser != null)
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: DiscordUserTile(
+                name: discordUser['name'],
+                discriminator: discordUser['discriminator'],
+                avatar: discordUser['avatar'],
+                online: true,
+                bot: true,
+                backgroundColor: const Color(0xff6a805e),
+                aboutMe: info == null
+                    ? {}
+                    : {
+                        'Online Since': formatDate(info!.started),
+                        'Plugins': '${statuses.length}',
+                        if (discordUser != null)
+                          'Snowflake': discordUser['snowflake'],
+                        if (discordGuilds != null) 'Guilds': '$discordGuilds',
+                        if (dbSize != null) 'DB Size': '$dbSize',
+                      },
+              ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
@@ -84,6 +87,7 @@ class DiscordUserTile extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(

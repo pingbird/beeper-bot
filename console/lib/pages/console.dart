@@ -21,7 +21,7 @@ class ConsolePage extends StatefulWidget {
 class _ConsolePageState extends State<ConsolePage>
     with TickerProviderStateMixin {
   late final controller = TabController(
-    length: 3,
+    length: 1,
     vsync: this,
   );
 
@@ -77,8 +77,6 @@ class _ConsolePageState extends State<ConsolePage>
                 controller: controller,
                 children: const [
                   Text('Status'),
-                  Text('Logs'),
-                  Text('Commands'),
                 ],
               ),
               Expanded(
@@ -401,7 +399,7 @@ class _Dropdown extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       width: 300,
       decoration: BoxDecoration(
-        color: const Color(0xff252729),
+        color: Color.alphaBlend(Colors.black12, const Color(0xff252729)),
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -420,10 +418,26 @@ class _Dropdown extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16.0),
-              color: Theme.of(context).primaryColor,
+              color: const Color(0xff252729),
               alignment: Alignment.centerRight,
-              child: Text(
-                'Signed in as ${loginState?.name}#${loginState?.discriminator}',
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Hello, '),
+                    TextSpan(
+                      text: '${loginState?.name}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: '#${loginState?.discriminator}',
+                      style: const TextStyle(
+                        color: Color(0xffc9c9c9),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                style: GoogleFonts.baloo2(fontSize: 16),
               ),
             ),
             TextButton(
