@@ -29,3 +29,28 @@ class LoginStateDto {
         'avatar': avatar,
       };
 }
+
+class DiscordGuildDto {
+  DiscordGuildDto({
+    required this.id,
+    required this.name,
+    required this.icon,
+  });
+
+  final String id;
+  final String name;
+  final String icon;
+
+  factory DiscordGuildDto.fromJson(Map<String, dynamic> json) =>
+      DiscordGuildDto(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        icon: json['icon'] as String,
+      );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'name': name,
+        'icon': icon,
+      };
+}

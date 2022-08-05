@@ -59,13 +59,14 @@ abstract class DiscordState {
         (data['guilds'] as List<dynamic>).forEach(_updateGuildEntity);
         break;
       case 'GUILD_CREATE':
-        _updateGuildEntity(data);
+        _onGuildCreate.add(_updateGuildEntity(data));
         break;
       case 'GUILD_UPDATE':
         _updateGuildEntity(data);
         break;
       case 'GUILD_DELETE':
         final guild = _updateGuildEntity(data);
+        guild.available = false;
         guild.destroyed = true;
         _onGuildDestroy.add(guild);
         _members.remove(guild.id);

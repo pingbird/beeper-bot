@@ -174,7 +174,7 @@ class ConsoleConnectionManager {
       'Online since': formatDate(info.started),
       if (statuses['/discord'] != null) ...<String, dynamic>{
         'Snowflake': statuses['/discord']['user']['id'],
-        'Guilds': statuses['/discord']['guilds'],
+        'Guilds': statuses['/discord']['guilds'].length,
       },
     };
 

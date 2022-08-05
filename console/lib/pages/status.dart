@@ -1,4 +1,5 @@
 import 'package:admin2/connection.dart';
+import 'package:beeper_common/admin.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +21,13 @@ class StatusPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final discordStatus = statuses['/discord'];
     final discordUser = discordStatus?['user'];
-    final discordGuilds = discordStatus?['guilds'];
+    final discordGuildsData = discordStatus?['guilds'];
+    final discordGuilds = discordGuildsData == null
+        ? null
+        : [
+            for (final guild in discordGuildsData)
+              DiscordGuildDto.fromJson(guild),
+          ];
     final dbStatus = statuses['/database'];
     final dbSize = dbStatus?['size'];
 
@@ -45,12 +52,41 @@ class StatusPage extends StatelessWidget {
                         'Plugins': '${statuses.length}',
                         if (discordUser != null)
                           'Snowflake': discordUser['snowflake'],
-                        if (discordGuilds != null) 'Guilds': '$discordGuilds',
+                        if (discordGuilds != null)
+                          'Guilds': '${discordGuilds.length}',
                         if (dbSize != null) 'DB Size': '$dbSize',
                       },
               ),
             ),
           ),
+        if (discordGuilds != null)
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      bottom: 16,
+                      top: 32,
+                      left: 16,
+                    ),
+                    child: Text(
+                      'Guilds',
+                      style: GoogleFonts.baloo2(fontSize: 24),
+                    ),
+                  ),
+                ),
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return DiscordGuildTile(guild: discordGuilds[index]);
+                    },
+                    childCount: discordGuilds.length,
+                  ),
+                )
+              ],
+            ),
+          )
       ],
     );
   }
@@ -78,7 +114,7 @@ class DiscordUserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const tileColor = Color(0xff252729);
+    const tileColor = Color(0xff303336);
     return Container(
       width: 300,
       decoration: BoxDecoration(
@@ -243,6 +279,87 @@ class DiscordUserTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+class DiscordGuildTile extends StatelessWidget {
+  const DiscordGuildTile({
+    Key? key,
+    required this.guild,
+  }) : super(key: key);
+
+  final DiscordGuildDto guild;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: const BorderRadius.horizontal(
+            left: Radius.circular(8),
+          ),
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.only(
+              top: 8,
+              left: 16,
+              bottom: 8,
+              right: 8,
+            ),
+            child: Row(
+              children: [
+                AvatarBubble(
+                  size: 48,
+                  child: Image.network(
+                    guild.icon,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  guild.name,
+                  style: GoogleFonts.baloo2(fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AvatarBubble extends StatelessWidget {
+  const AvatarBubble({
+    Key? key,
+    required this.child,
+    required this.size,
+  }) : super(key: key);
+
+  final Widget child;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            spreadRadius: 4,
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox.square(
+        dimension: size,
+        child: child,
       ),
     );
   }

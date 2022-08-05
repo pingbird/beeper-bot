@@ -13,6 +13,7 @@ class DiscordGuild {
   });
 
   String? name;
+  String? iconHash;
   bool available = false;
   bool destroyed = false;
 
@@ -20,8 +21,33 @@ class DiscordGuild {
       UnmodifiableMapView(discord.internalMembers[id]!);
 
   void updateEntity(dynamic data) {
+    // name can be null if the guild is unavailable
     name = data['name'] as String? ?? name;
+    iconHash = data['icon'] as String?;
     available = data['unavailable'] != true;
+  }
+
+  Uri icon({
+    String? format,
+    int? size,
+  }) {
+    if (iconHash == null) {
+      return Uri(
+        scheme: 'https',
+        host: 'cdn.discordapp.com',
+        path: 'embed/avatars/${id % 5}.png',
+      );
+    } else {
+      format ??= iconHash!.startsWith('a_') ? 'gif' : 'png';
+      return Uri(
+        scheme: 'https',
+        host: 'cdn.discordapp.com',
+        path: 'icons/$id/$iconHash.$format',
+        queryParameters: <String, String>{
+          if (size != null) 'size': '$size',
+        },
+      );
+    }
   }
 }
 

@@ -207,7 +207,11 @@ class DiscordConnection {
 
         final url = response['url'] as String;
         _socket = await WebSocket.connect(url + '?v=6&encoding=json');
-        await _socket.forEach(_handle);
+        await _socket.forEach(
+          (dynamic message) => Future<void>.sync(
+            () => _handle(message),
+          ),
+        );
         logger.log(
             'discord', 'closed: ${_socket.closeCode} (${_socket.closeReason})');
         var reason = 'Socket closed with code ${_socket.closeCode}';
